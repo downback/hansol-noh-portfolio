@@ -1,5 +1,5 @@
 {
-  "name": "artist-portfolio-template",
+  "name": "hansol-noh-portfolio",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -40,7 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "10.0.2",
+    "eslint": "^9.0.0",
     "eslint-config-next": "16.1.6",
     "supabase": "^2.76.10",
     "tailwindcss": "^4",

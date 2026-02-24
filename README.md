@@ -1,4 +1,4 @@
-# Artist Portfolio Template
+# Hansol Noh Portfolio
 
 Portfolio website with a single-admin CMS built on Next.js + Supabase.
 
