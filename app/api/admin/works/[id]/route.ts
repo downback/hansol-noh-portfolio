@@ -10,6 +10,10 @@ import {
   removeStoragePathsSafely,
   uploadStorageFile,
 } from "@/lib/server/storageTransaction"
+import {
+  insertAdditionalWorkImages,
+  removeAdditionalWorkImages,
+} from "@/lib/server/workMutation"
 import { supabaseServer } from "@/lib/server"
 import { validateImageUploadFile } from "@/lib/uploadValidation"
 import { isUuid } from "@/lib/validation"
@@ -38,6 +42,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const yearRaw = formData.get("year")?.toString().trim()
     const title = formData.get("title")?.toString().trim()
     const caption = formData.get("caption")?.toString().trim()
+    const additionalFiles = formData
+      .getAll("additional_images")
+      .filter((value): value is File => value instanceof File)
+    const removedAdditionalImageIds = formData
+      .getAll("removedAdditionalImageIds")
+      .map((value) => value.toString().trim())
+      .filter((value) => value.length > 0)
 
     const metadataValidationResult = validateWorkMetadata({
       yearRaw: yearRaw ?? "",
@@ -65,15 +76,40 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     } = validatedData
     // slug is immutable after creation — never updated on PATCH
 
+    const invalidAdditionalImage = additionalFiles.find(
+      (additional) => validateImageUploadFile(additional) !== null,
+    )
+    if (invalidAdditionalImage) {
+      const additionalValidationError = validateImageUploadFile(
+        invalidAdditionalImage,
+      )
+      return NextResponse.json(
+        {
+          error:
+            additionalValidationError || "Only image uploads are allowed.",
+        },
+        { status: 400 },
+      )
+    }
+
+    if (removedAdditionalImageIds.some((imageId) => !isUuid(imageId))) {
+      return NextResponse.json(
+        { error: "Invalid additional image id." },
+        { status: 400 },
+      )
+    }
+
     const { data: artwork, error: artworkError } = await supabase
       .from("artworks")
-      .select("id")
+      .select("id, slug")
       .eq("id", id)
       .maybeSingle()
 
     if (artworkError || !artwork?.id) {
       return NextResponse.json({ error: "Work not found." }, { status: 404 })
     }
+
+    const artworkSlug = artwork.slug ?? ""
 
     const { data: primaryImage, error: primaryImageError } = await supabase
       .from("artwork_images")
@@ -99,7 +135,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         )
       }
       nextStoragePath = buildStoragePathWithPrefix({
-        prefix: "works",
+        prefix: `works/${artworkSlug}`,
         file,
       })
       const { error: uploadError } = await uploadStorageFile({
@@ -172,6 +208,48 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         storagePaths: [primaryImage.storage_path],
         logContext: "Work update old-file cleanup",
       })
+    }
+
+    if (additionalFiles.length > 0 && artworkSlug) {
+      const { data: latestImage } = await supabase
+        .from("artwork_images")
+        .select("display_order")
+        .eq("artwork_id", id)
+        .order("display_order", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      const baseDisplayOrder = (latestImage?.display_order ?? -1) + 1
+      const additionalResult = await insertAdditionalWorkImages({
+        supabase,
+        bucketName,
+        artworkId: id,
+        slug: artworkSlug,
+        caption: normalizedCaption,
+        additionalFiles,
+        startDisplayOrder: baseDisplayOrder,
+      })
+      if (additionalResult.errorMessage) {
+        return NextResponse.json(
+          { error: additionalResult.errorMessage },
+          { status: 500 },
+        )
+      }
+    }
+
+    if (removedAdditionalImageIds.length > 0) {
+      const removeResult = await removeAdditionalWorkImages({
+        supabase,
+        bucketName,
+        artworkId: id,
+        removedAdditionalImageIds,
+      })
+      if (removeResult.errorMessage) {
+        return NextResponse.json(
+          { error: removeResult.errorMessage },
+          { status: removeResult.status },
+        )
+      }
     }
 
     await insertActivityLog(supabase, {

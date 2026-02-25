@@ -15,14 +15,14 @@ type NavLink = {
 }
 
 type SidebarNavDesktopProps = {
-  worksYears: string[]
+  works: ExhibitionItem[]
   soloExhibitions: ExhibitionItem[]
   groupExhibitions: ExhibitionItem[]
   navLinks: NavLink[]
 }
 
 export default function SidebarNavDesktop({
-  worksYears,
+  works,
   soloExhibitions,
   groupExhibitions,
   navLinks,
@@ -38,7 +38,7 @@ export default function SidebarNavDesktop({
       </div>
       <div className="flex-auto overflow-y-auto hide-scrollbar">
         <SidebarNavContent
-          worksYears={worksYears}
+          works={works}
           soloExhibitions={soloExhibitions}
           groupExhibitions={groupExhibitions}
           navLinks={navLinks}

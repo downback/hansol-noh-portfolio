@@ -29,6 +29,9 @@ export const useWorksPanelData = () => {
   const [errorMessage, setErrorMessage] = useState("")
   const [previewItems, setPreviewItems] = useState<WorkPreviewItem[]>([])
   const [editingItem, setEditingItem] = useState<WorkPreviewItem | null>(null)
+  const [editingAdditionalImages, setEditingAdditionalImages] = useState<
+    { id: string; url: string }[]
+  >([])
   const [manualYears, setManualYears] = useState<string[]>([])
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [selectedYearCategory, setSelectedYearCategory] = useState<string>("")
@@ -167,6 +170,12 @@ export const useWorksPanelData = () => {
         }
         formData.append("title", values.title)
         formData.append("caption", values.caption)
+        values.additionalImages.forEach((file) => {
+          formData.append("additional_images", file)
+        })
+        values.removedAdditionalImageIds?.forEach((imageId) => {
+          formData.append("removedAdditionalImageIds", imageId)
+        })
 
         const response = await fetch(
           isEditMode
@@ -216,6 +225,7 @@ export const useWorksPanelData = () => {
             {
               id: crypto.randomUUID(),
               imageUrl: previewUrl,
+              slug: values.slug,
               title: values.title,
               caption: values.caption,
               year: Number(resolvedYear),
@@ -229,6 +239,7 @@ export const useWorksPanelData = () => {
         shouldRevokePendingUrls = didReloadPreviewItems
         setIsUploadOpen(false)
         setEditingItem(null)
+        setEditingAdditionalImages([])
         setSelectedYear("")
       } catch (error) {
         console.error("Failed to save work entry", { error })
@@ -273,13 +284,14 @@ export const useWorksPanelData = () => {
         slug: editingItem.slug,
         title: editingItem.title,
         caption: editingItem.caption,
+        additionalImages: editingAdditionalImages,
       }
     }
     if (selectedYear) {
       return { year: selectedYear }
     }
     return undefined
-  }, [editingItem, selectedYear])
+  }, [editingItem, editingAdditionalImages, selectedYear])
 
   const yearOptions = useMemo(() => {
     const yearsFromItems = previewItems
@@ -348,7 +360,7 @@ export const useWorksPanelData = () => {
   )
 
   const handleEdit = useCallback(
-    (item: WorkPreviewItem) => {
+    async (item: WorkPreviewItem) => {
       setEditingItem(item)
       const nextYear = item.year ? String(item.year) : ""
       const nextCategory =
@@ -359,8 +371,36 @@ export const useWorksPanelData = () => {
       setSelectedYearCategory(nextCategory)
       setErrorMessage("")
       setIsUploadOpen(true)
+
+      const { data, error } = await supabase
+        .from("artwork_images")
+        .select("id, storage_path, is_primary, display_order")
+        .eq("artwork_id", item.id)
+        .eq("is_primary", false)
+        .order("display_order", { ascending: true })
+
+      if (error) {
+        console.error("Failed to load work additional images", { error })
+        setEditingAdditionalImages([])
+        return
+      }
+
+      const additionalImages = (data ?? [])
+        .filter((img) => img.storage_path)
+        .map((img) => {
+          const { data: publicData } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(img.storage_path)
+          return {
+            id: img.id,
+            url: publicData?.publicUrl ?? "",
+          }
+        })
+        .filter((img) => img.url.length > 0)
+
+      setEditingAdditionalImages(additionalImages)
     },
-    [rangeEnd, rangeLabel, rangeStart],
+    [bucketName, rangeEnd, rangeLabel, rangeStart, supabase],
   )
 
   const handleDelete = useCallback(

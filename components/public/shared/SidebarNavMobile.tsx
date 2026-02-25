@@ -19,14 +19,14 @@ type NavLink = {
 }
 
 type SidebarNavMobileProps = {
-  worksYears: string[]
+  works: ExhibitionItem[]
   soloExhibitions: ExhibitionItem[]
   groupExhibitions: ExhibitionItem[]
   navLinks: NavLink[]
 }
 
 export default function SidebarNavMobile({
-  worksYears,
+  works,
   soloExhibitions,
   groupExhibitions,
   navLinks,
@@ -136,7 +136,7 @@ export default function SidebarNavMobile({
             )}
           >
             <SidebarNavContent
-              worksYears={worksYears}
+              works={works}
               soloExhibitions={soloExhibitions}
               groupExhibitions={groupExhibitions}
               navLinks={navLinks}

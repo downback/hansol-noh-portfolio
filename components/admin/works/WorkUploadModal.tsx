@@ -25,7 +25,9 @@ import AdminDialog from "@/components/admin/shared/AdminDialog"
 import SavingDotsLabel from "@/components/admin/shared/SavingDotsLabel"
 import { useSingleImageInput } from "@/components/admin/shared/hooks/useSingleImageInput"
 import { useModalOpenTransition } from "@/components/admin/shared/hooks/useModalOpenTransition"
-import { formatFileSize, maxImageFileSizeBytes } from "@/lib/fileUpload"
+import ExhibitionAdditionalImagesPreview from "@/components/admin/exhibition/ExhibitionAdditionalImagesPreview"
+import { useExhibitionImagePreviews } from "@/components/admin/exhibition/hooks/useExhibitionImagePreviews"
+import { formatFileSize } from "@/lib/fileUpload"
 
 export type WorkFormValues = {
   imageFile: File | null
@@ -33,6 +35,8 @@ export type WorkFormValues = {
   slug: string
   title: string
   caption: string
+  additionalImages: File[]
+  removedAdditionalImageIds?: string[]
 }
 
 type WorkUploadModalProps = {
@@ -50,6 +54,7 @@ type WorkUploadModalProps = {
     slug?: string
     title?: string
     caption?: string
+    additionalImages?: { id: string; url: string }[]
   }
   isEditMode?: boolean
   confirmLabel?: string
@@ -84,16 +89,45 @@ export default function WorkUploadModal({
   const [slugTitle, setSlugTitle] = useState(initialValues?.slug ?? "")
   const [titleValue, setTitleValue] = useState(initialValues?.title ?? "")
   const [caption, setCaption] = useState(initialValues?.caption ?? "")
+  const [additionalImages, setAdditionalImages] = useState<File[]>([])
+  const [existingAdditionalImages, setExistingAdditionalImages] = useState<
+    { id: string; url: string }[]
+  >([])
+  const [removedAdditionalImageIds, setRemovedAdditionalImageIds] = useState<
+    string[]
+  >([])
   const wasSubmittingRef = useRef(false)
   const [errorDialogOpen, setErrorDialogOpen] = useState(false)
   const [errorDialogMessage, setErrorDialogMessage] = useState("")
+  const {
+    maxFileSizeBytes,
+    additionalPreviewUrls,
+    appendAdditionalPreviews,
+    removeAdditionalPreviewAt,
+    clearPreviews,
+  } = useExhibitionImagePreviews()
 
   const showError = (message: string) => {
     setErrorDialogMessage(message)
     setErrorDialogOpen(true)
   }
 
+  const handleRemoveAdditionalImage = (indexToRemove: number) => {
+    setAdditionalImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove),
+    )
+    removeAdditionalPreviewAt(indexToRemove)
+  }
+
+  const handleRemoveExistingAdditionalImage = (id: string) => {
+    setExistingAdditionalImages((prev) => prev.filter((item) => item.id !== id))
+    setRemovedAdditionalImageIds((prev) =>
+      prev.includes(id) ? prev : [...prev, id],
+    )
+  }
+
   const applyInitialValues = useCallback(() => {
+    clearPreviews()
     setSelectedImageName("")
     setImageFile(null)
     setImagePreviewUrl("")
@@ -102,7 +136,10 @@ export default function WorkUploadModal({
     setTitleValue(initialValues?.title ?? "")
     setCaption(initialValues?.caption ?? "")
     setInitialImageUrl(initialValues?.imageUrl ?? "")
-  }, [initialValues])
+    setExistingAdditionalImages(initialValues?.additionalImages ?? [])
+    setRemovedAdditionalImageIds([])
+    setAdditionalImages([])
+  }, [clearPreviews, initialValues])
 
   const handleAcceptedImageFile = useCallback((file: File) => {
     setSelectedImageName(file.name)
@@ -114,15 +151,15 @@ export default function WorkUploadModal({
     (file: File, source: "drop" | "input") => {
       if (source === "input") {
         showError(
-          `해당 파일의 용량이 너무 큽니다: "${file.name}" (${formatFileSize(file.size)}). 최대 용량인 ${formatFileSize(maxImageFileSizeBytes)} 이하의 이미지(들)로 다시 업로드 해주세요.`,
+          `해당 파일의 용량이 너무 큽니다: "${file.name}" (${formatFileSize(file.size)}). 최대 용량인 ${formatFileSize(maxFileSizeBytes)} 이하의 이미지(들)로 다시 업로드 해주세요.`,
         )
         return
       }
       showError(
-        `File "${file.name}" is too large (${formatFileSize(file.size)}). Maximum size is ${formatFileSize(maxImageFileSizeBytes)}.`,
+        `File "${file.name}" is too large (${formatFileSize(file.size)}). Maximum size is ${formatFileSize(maxFileSizeBytes)}.`,
       )
     },
-    [],
+    [maxFileSizeBytes],
   )
 
   const {
@@ -130,7 +167,7 @@ export default function WorkUploadModal({
     handleDrop: handleImageDrop,
     handleInputChange: handleImageInputChange,
   } = useSingleImageInput({
-    maxFileSizeBytes: maxImageFileSizeBytes,
+    maxFileSizeBytes,
     onFileAccepted: handleAcceptedImageFile,
     onFileOversize: handleOversizeImageFile,
   })
@@ -152,6 +189,7 @@ export default function WorkUploadModal({
 
     if (wasSubmittingRef.current && !isSubmitting && !errorMessage) {
       resetTimeout = setTimeout(() => {
+        clearPreviews()
         setSelectedImageName("")
         setImagePreviewUrl("")
         setImageFile(null)
@@ -160,6 +198,9 @@ export default function WorkUploadModal({
         setTitleValue("")
         setCaption("")
         setYear("")
+        setAdditionalImages([])
+        setExistingAdditionalImages([])
+        setRemovedAdditionalImageIds([])
       }, 0)
     }
 
@@ -167,12 +208,13 @@ export default function WorkUploadModal({
     return () => {
       if (resetTimeout) clearTimeout(resetTimeout)
     }
-  }, [open, isSubmitting, errorMessage])
+  }, [clearPreviews, open, isSubmitting, errorMessage])
 
   useModalOpenTransition({ open, onOpen: applyInitialValues })
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      clearPreviews()
       setSelectedImageName("")
       setImagePreviewUrl("")
       setImageFile(null)
@@ -181,6 +223,9 @@ export default function WorkUploadModal({
       setSlugTitle("")
       setTitleValue("")
       setCaption("")
+      setAdditionalImages([])
+      setExistingAdditionalImages([])
+      setRemovedAdditionalImageIds([])
     }
 
     onOpenChange(nextOpen)
@@ -207,7 +252,9 @@ export default function WorkUploadModal({
     imageFile !== null ||
     year !== initialYear ||
     titleValue !== initialTitle ||
-    caption !== initialCaption
+    caption !== initialCaption ||
+    additionalImages.length > 0 ||
+    removedAdditionalImageIds.length > 0
 
   const isSaveDisabled =
     isConfirmDisabled || isSubmitting || (isEditMode && !hasChanges)
@@ -333,6 +380,66 @@ export default function WorkUploadModal({
                 className="min-h-[60px]"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="upload-additional-images">
+                Additional images
+              </Label>
+              <Input
+                id="upload-additional-images"
+                type="file"
+                accept="image/png, image/jpeg, image/jpg"
+                multiple
+                onChange={(event) => {
+                  const files = Array.from(event.target.files ?? [])
+                  if (files.length === 0) return
+
+                  const oversizedFiles = files.filter(
+                    (file) => file.size > maxFileSizeBytes,
+                  )
+                  if (oversizedFiles.length > 0) {
+                    const fileList = oversizedFiles
+                      .map(
+                        (file) =>
+                          `"${file.name}" (${formatFileSize(file.size)})`,
+                      )
+                      .join(", ")
+                    showError(
+                      `아래 파일(들)의 용량이 너무 큽니다: ${fileList}. 최대 용량인 ${formatFileSize(maxFileSizeBytes)} 이하의 이미지(들)로 다시 업로드 해주세요.`,
+                    )
+                    event.target.value = ""
+                    return
+                  }
+
+                  const existingKeys = new Set(
+                    additionalImages.map(
+                      (file) =>
+                        `${file.name}-${file.size}-${file.lastModified}`,
+                    ),
+                  )
+                  const newFiles = files.filter((file) => {
+                    const key = `${file.name}-${file.size}-${file.lastModified}`
+                    if (existingKeys.has(key)) return false
+                    existingKeys.add(key)
+                    return true
+                  })
+                  if (newFiles.length === 0) {
+                    event.target.value = ""
+                    return
+                  }
+                  setAdditionalImages((prev) => [...prev, ...newFiles])
+                  appendAdditionalPreviews(newFiles)
+                  event.target.value = ""
+                }}
+              />
+              <ExhibitionAdditionalImagesPreview
+                existingAdditionalImages={existingAdditionalImages}
+                additionalPreviewUrls={additionalPreviewUrls}
+                onRemoveExistingAdditionalImage={
+                  handleRemoveExistingAdditionalImage
+                }
+                onRemoveAdditionalPreviewImage={handleRemoveAdditionalImage}
+              />
+            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -356,6 +463,8 @@ export default function WorkUploadModal({
                   slug: derivedSlug,
                   title: titleValue,
                   caption,
+                  additionalImages,
+                  removedAdditionalImageIds,
                 })
               }
               disabled={isSaveDisabled}

@@ -25,10 +25,10 @@ export default async function PublicLayout({
   ] = await Promise.all([
     supabase
       .from("artworks")
-      .select("year")
+      .select("title, slug")
       .eq("category", "works")
-      .not("year", "is", null)
-      .order("year", { ascending: false }),
+      .not("slug", "is", null)
+      .order("display_order", { ascending: false }),
     supabase
       .from("exhibitions")
       .select("title, slug")
@@ -49,13 +49,24 @@ export default async function PublicLayout({
     })
   }
 
-  const worksYears = Array.from(
-    new Set(
-      (worksRows ?? [])
-        .map((row) => (row.year ? String(row.year) : ""))
-        .filter((year) => year.length > 0),
-    ),
-  )
+  const buildWorks = (
+    rows: { title?: string | null; slug?: string | null }[],
+  ) => {
+    const seen = new Set<string>()
+    return rows
+      .map((row) => ({
+        title: normalizeTitle(row.title),
+        slug: normalizeSlug(row.slug),
+      }))
+      .filter((row) => row.title.length > 0 && row.slug.length > 0)
+      .filter((row) => {
+        if (seen.has(row.slug)) return false
+        seen.add(row.slug)
+        return true
+      })
+  }
+
+  const works = buildWorks(worksRows ?? [])
 
   const buildExhibitions = (
     rows: { title?: string | null; slug?: string | null }[],
@@ -84,13 +95,13 @@ export default async function PublicLayout({
     <div className="flex min-h-screen flex-col md:flex-row">
       <div className="flex w-full flex-col md:sticky md:top-0 md:h-screen md:w-xs xl:w-sm md:shrink-0 md:overflow-y-auto">
         <SidebarNavDesktop
-          worksYears={worksYears}
+          works={works}
           soloExhibitions={soloExhibitions}
           groupExhibitions={groupExhibitions}
           navLinks={navLinks}
         />
         <SidebarNavMobile
-          worksYears={worksYears}
+          works={works}
           soloExhibitions={soloExhibitions}
           groupExhibitions={groupExhibitions}
           navLinks={navLinks}

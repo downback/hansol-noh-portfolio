@@ -5,23 +5,14 @@ import { GripVertical } from "lucide-react"
 import ImageCaptionPreview from "@/components/admin/shared/ImageCaptionPreview"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-type WorkPreviewItem = {
-  id: string
-  imageUrl: string
-  title: string
-  caption: string
-  year: number | null
-  displayOrder: number
-  createdAt: string
-}
+import type { WorkPreviewItem } from "@/components/admin/works/hooks/useWorksPanelData"
 
 type WorksCardByYearProps = {
   yearLabel: string
   items: WorkPreviewItem[]
   isLoading?: boolean
   onAdd: () => void
-  onEdit: (item: WorkPreviewItem) => void
+  onEdit: (item: WorkPreviewItem) => void | Promise<void>
   onDelete: (item: WorkPreviewItem) => Promise<void>
   onReorder?: (items: WorkPreviewItem[]) => void
 }
