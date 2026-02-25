@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
+import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 
-type ExhibitionItem = {
+type WorkItem = {
   title: string
   slug: string
 }
@@ -14,13 +15,42 @@ type NavLink = {
 }
 
 type SidebarNavContentProps = {
-  works: ExhibitionItem[]
-  soloExhibitions: ExhibitionItem[]
-  groupExhibitions: ExhibitionItem[]
+  works: WorkItem[]
+  soloExhibitions: WorkItem[]
+  groupExhibitions: WorkItem[]
   navLinks: NavLink[]
   pathname: string
   className?: string
   onNavigate?: () => void
+}
+
+type UnifiedWorkLink = {
+  label: string
+  href: string
+  key: string
+}
+
+function buildUnifiedWorkLinks(
+  works: WorkItem[],
+  soloExhibitions: WorkItem[],
+  groupExhibitions: WorkItem[],
+): UnifiedWorkLink[] {
+  const workLinks: UnifiedWorkLink[] = works.map((item) => ({
+    label: item.title,
+    href: `/works/${item.slug}`,
+    key: `work-${item.slug}`,
+  }))
+  const soloLinks: UnifiedWorkLink[] = soloExhibitions.map((item) => ({
+    label: item.title,
+    href: `/exhibitions/solo/${item.slug}`,
+    key: `solo-${item.slug}`,
+  }))
+  const groupLinks: UnifiedWorkLink[] = groupExhibitions.map((item) => ({
+    label: item.title,
+    href: `/exhibitions/group/${item.slug}`,
+    key: `group-${item.slug}`,
+  }))
+  return [...workLinks, ...soloLinks, ...groupLinks]
 }
 
 export default function SidebarNavContent({
@@ -32,11 +62,10 @@ export default function SidebarNavContent({
   className,
   onNavigate,
 }: SidebarNavContentProps) {
-  const workLinks = works.map((item) => ({
-    label: item.slug,
-    href: `/works/${item.slug}`,
-    key: item.slug,
-  }))
+  const unifiedWorkLinks = useMemo(
+    () => buildUnifiedWorkLinks(works, soloExhibitions, groupExhibitions),
+    [works, soloExhibitions, groupExhibitions],
+  )
 
   return (
     <nav className={cn("flex flex-col h-full font-light", className)}>
@@ -47,7 +76,7 @@ export default function SidebarNavContent({
             <Link
               key={link.href}
               className={cn(
-                "transition-colors hover:font-normal text-base md:text-[14px] ",
+                "transition-colors hover:font-normal text-base md:text-[14px]",
                 pathname === link.href && "font-medium",
               )}
               href={link.href}
@@ -62,70 +91,27 @@ export default function SidebarNavContent({
         <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
           work
         </span>
-        <div className="flex flex-col">
-          {workLinks.map((item) => (
-            <Link
-              key={item.key}
-              className={cn(
-                "inline-block transition-colors hover:font-normal text-base md:text-[14px] font-light",
-                pathname === item.href && "font-medium",
-              )}
-              href={item.href}
-              onClick={onNavigate}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
-          exhibitions
-        </span>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-row justify-start gap-2">
-            <span className="inline-block min-w-30 text-sm font-light">
-              solo exhibitions
+        <div className="flex flex-col gap-0.5">
+          {unifiedWorkLinks.length === 0 ? (
+            <span className="text-sm text-muted-foreground py-1">
+              No works yet
             </span>
-            <div className="flex min-w-0 flex-col text-base md:text-[14px] font-light">
-              {soloExhibitions.map((item) => (
-                <Link
-                  key={item.slug}
-                  className={cn(
-                    "block truncate transition-colors hover:font-normal capitalize",
-                    pathname === `/exhibitions/solo/${item.slug}` &&
-                      "font-medium",
-                  )}
-                  href={`/exhibitions/solo/${item.slug}`}
-                  onClick={onNavigate}
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-row justify-start gap-2">
-            <span className="inline-block min-w-30 text-sm font-light">
-              group exhibitions
-            </span>
-            <div className="flex min-w-0 flex-col text-base md:text-[14px] font-light">
-              {groupExhibitions.map((item) => (
-                <Link
-                  key={item.slug}
-                  className={cn(
-                    "block truncate transition-colors hover:font-normal capitalize",
-                    pathname === `/exhibitions/group/${item.slug}` &&
-                      "font-medium",
-                  )}
-                  href={`/exhibitions/group/${item.slug}`}
-                  onClick={onNavigate}
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </div>
+          ) : (
+            unifiedWorkLinks.map((item) => (
+              <Link
+                key={item.key}
+                className={cn(
+                  "block truncate py-0.5 transition-colors hover:font-normal text-base md:text-[14px] font-light capitalize",
+                  pathname === item.href && "font-medium",
+                )}
+                href={item.href}
+                onClick={onNavigate}
+                title={item.label}
+              >
+                {item.label}
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </nav>

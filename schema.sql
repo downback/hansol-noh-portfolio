@@ -440,3 +440,6 @@ create index idx_activity_log_admin_created
 --   bucket_id = 'site-assets'
 --   and auth.uid() = (select admin_user_id from public.app_admin where singleton_id = true)
 -- );
+
+alter table public.artworks
+add column slug text not null unique;
