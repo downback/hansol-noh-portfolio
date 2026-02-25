@@ -63,6 +63,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       title: normalizedTitle,
       caption: normalizedCaption,
     } = validatedData
+    // slug is immutable after creation — never updated on PATCH
 
     const { data: artwork, error: artworkError } = await supabase
       .from("artworks")
@@ -82,7 +83,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .maybeSingle()
 
     if (primaryImageError || !primaryImage?.id || !primaryImage.storage_path) {
-      return NextResponse.json({ error: "Work image not found." }, { status: 404 })
+      return NextResponse.json(
+        { error: "Work image not found." },
+        { status: 404 },
+      )
     }
 
     let nextStoragePath = primaryImage.storage_path

@@ -196,9 +196,9 @@ export default function TextPanel() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           {isLoadingTextEntries ? (
-            <p>Loading text...</p>
+            <p className="text-xs text-muted-foreground">Loading text...</p>
           ) : textEntries.length === 0 ? (
-            <p>No text yet.</p>
+            <p className="text-xs text-muted-foreground">No text yet.</p>
           ) : (
             <div className="grid gap-4">
               {textEntries.map((entry) => (

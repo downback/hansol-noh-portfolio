@@ -244,20 +244,21 @@ export default function ExhibitionUploadModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="exhibition-title">Exhibition title *</Label>
-              <Textarea
+              <Input
                 id="exhibition-title"
                 value={exhibitionTitle}
                 onChange={(event) => setExhibitionTitle(event.target.value)}
                 placeholder="메뉴바에 들어갈 전시 타이틀을 입력해주세요"
-                className="min-h-[60px]"
                 disabled={isEditMode}
               />
               <div className="flex flex-col gap-0">
                 <div className="text-xs text-muted-foreground">
-                  *위 타이틀은 최초 업로드 후 수정이 불가능 합니다.
+                  *위 타이틀은 메뉴바에 들어갈 타이틀로 최초 업로드 후 수정이
+                  불가능 합니다.
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  가능한 간결하게 띄어쓰기에 유의하여 작성해주세요.
+                  가능한 영문으로 간결하게 띄어쓰기에 유의하여 특수문자 없이
+                  작성해주세요.
                 </div>
               </div>
             </div>

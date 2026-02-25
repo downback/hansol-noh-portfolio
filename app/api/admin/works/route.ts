@@ -30,12 +30,20 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const file = formData.get("file")
     const yearRaw = formData.get("year")?.toString().trim()
+    const slug = formData.get("slug")?.toString().trim()
     const title = formData.get("title")?.toString().trim()
     const caption = formData.get("caption")?.toString().trim()
 
     if (!(file instanceof File)) {
       return NextResponse.json(
         { error: "Missing image file." },
+        { status: 400 },
+      )
+    }
+
+    if (!slug) {
+      return NextResponse.json(
+        { error: "Simple title (slug) is required." },
         { status: 400 },
       )
     }
@@ -47,6 +55,7 @@ export async function POST(request: Request) {
 
     const metadataValidationResult = validateWorkMetadata({
       yearRaw: yearRaw ?? "",
+      slug,
       title: title ?? "",
       caption: caption ?? "",
     })
@@ -66,9 +75,17 @@ export async function POST(request: Request) {
       metadataValidationResult.data as WorkMetadataValidationData
     const {
       year,
+      slug: normalizedSlug,
       title: normalizedTitle,
       caption: normalizedCaption,
     } = validatedData
+
+    if (!normalizedSlug) {
+      return NextResponse.json(
+        { error: "Simple title (slug) is required." },
+        { status: 400 },
+      )
+    }
 
     const storagePath = buildStoragePathWithPrefix({
       prefix: "works",
@@ -116,6 +133,7 @@ export async function POST(request: Request) {
       .insert({
         category: "works",
         year,
+        slug: normalizedSlug,
         title: normalizedTitle,
         display_order: nextDisplayOrder,
       })

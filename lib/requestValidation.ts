@@ -45,14 +45,18 @@ const textPayloadSchema = z
     year: payload.year as number,
   }))
 
+const slugPattern = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u
+
 const workMetadataSchema = z
   .object({
     yearRaw: z.string(),
+    slug: z.string().optional(),
     title: z.string(),
     caption: z.string(),
   })
   .superRefine((input, context) => {
     const yearRaw = input.yearRaw.trim()
+    const slug = (input.slug ?? "").trim()
     const title = input.title.trim()
     const caption = input.caption.trim()
 
@@ -81,6 +85,15 @@ const workMetadataSchema = z
       return
     }
 
+    if (slug && !slugPattern.test(slug)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Slug must contain only lowercase letters, numbers, and hyphens.",
+      })
+      return
+    }
+
     if (!title) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -98,6 +111,7 @@ const workMetadataSchema = z
   })
   .transform((input) => ({
     year: Number(input.yearRaw.trim()),
+    slug: (input.slug ?? "").trim() || null,
     title: input.title.trim(),
     caption: input.caption.trim(),
   }))
@@ -114,6 +128,7 @@ export type TextPayloadValidationData = {
 
 export type WorkMetadataValidationData = {
   year: number
+  slug: string | null
   title: string
   caption: string
 }
@@ -137,6 +152,7 @@ export const validateTextPayload = (
 
 export const validateWorkMetadata = (input: {
   yearRaw: string
+  slug?: string
   title: string
   caption: string
 }): ValidationResult<WorkMetadataValidationData> => {

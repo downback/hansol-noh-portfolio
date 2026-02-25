@@ -84,7 +84,7 @@ export default async function Bio() {
       <div className="flex md:flex-row flex-col w-full">
         <div className="md:flex-1">
           <div className="text-[14px] font-medium mb-2 mt-2 md:mt-0">
-            Artist Name
+            Hansol Noh
           </div>
           <div className="text-sm/4 font-light">1991 출생</div>
           <div className="text-sm/4 font-light">born in 1991</div>

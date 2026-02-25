@@ -71,89 +71,16 @@ export default function SidebarNavContent({
     }, [])
 
   return (
-    <nav className={cn("flex flex-col justify-between h-full", className)}>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
-            work
-          </span>
-          <div className="flex flex-col">
-            {workLinks.map((item) => (
-              <Link
-                key={item.key}
-                className={cn(
-                  "inline-block transition-colors hover:text-red-500 text-base md:text-[14px] font-light",
-                  pathname === item.href && "text-red-500",
-                )}
-                href={item.href}
-                onClick={onNavigate}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
-            exhibitions
-          </span>
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-row justify-start gap-2">
-              <span className="inline-block min-w-30 text-sm font-light">
-                solo exhibitions
-              </span>
-              <div className="flex min-w-0 flex-col text-base md:text-[14px] font-light">
-                {soloExhibitions.map((item) => (
-                  <Link
-                    key={item.slug}
-                    className={cn(
-                      "block truncate transition-colors hover:text-red-500 capitalize",
-                      pathname === `/exhibitions/solo/${item.slug}` &&
-                        "text-red-500",
-                    )}
-                    href={`/exhibitions/solo/${item.slug}`}
-                    onClick={onNavigate}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-row justify-start gap-2">
-              <span className="inline-block min-w-30 text-sm font-light">
-                group exhibitions
-              </span>
-              <div className="flex min-w-0 flex-col text-base md:text-[14px] font-light">
-                {groupExhibitions.map((item) => (
-                  <Link
-                    key={item.slug}
-                    className={cn(
-                      "block truncate transition-colors hover:text-red-500 capitalize",
-                      pathname === `/exhibitions/group/${item.slug}` &&
-                        "text-red-500",
-                    )}
-                    href={`/exhibitions/group/${item.slug}`}
-                    onClick={onNavigate}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-row justify-between w-full border-b-[0.9px] border-black mb-4 md:mb-8">
+    <nav className={cn("flex flex-col h-full font-light", className)}>
+      <div className="flex flex-col">
         {navLinks
           .filter((link) => link.href !== "/works")
           .map((link) => (
             <Link
               key={link.href}
               className={cn(
-                "inline-block transition-colors hover:text-red-500 text-base md:text-[14px] ",
-                pathname === link.href && "text-red-500",
+                "transition-colors hover:font-normal text-base md:text-[14px] ",
+                pathname === link.href && "font-medium",
               )}
               href={link.href}
               onClick={onNavigate}
@@ -161,6 +88,77 @@ export default function SidebarNavContent({
               {link.label}
             </Link>
           ))}
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
+          work
+        </span>
+        <div className="flex flex-col">
+          {workLinks.map((item) => (
+            <Link
+              key={item.key}
+              className={cn(
+                "inline-block transition-colors hover:font-normal text-base md:text-[14px] font-light",
+                pathname === item.href && "font-medium",
+              )}
+              href={item.href}
+              onClick={onNavigate}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
+          exhibitions
+        </span>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-row justify-start gap-2">
+            <span className="inline-block min-w-30 text-sm font-light">
+              solo exhibitions
+            </span>
+            <div className="flex min-w-0 flex-col text-base md:text-[14px] font-light">
+              {soloExhibitions.map((item) => (
+                <Link
+                  key={item.slug}
+                  className={cn(
+                    "block truncate transition-colors hover:font-normal capitalize",
+                    pathname === `/exhibitions/solo/${item.slug}` &&
+                      "font-medium",
+                  )}
+                  href={`/exhibitions/solo/${item.slug}`}
+                  onClick={onNavigate}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-row justify-start gap-2">
+            <span className="inline-block min-w-30 text-sm font-light">
+              group exhibitions
+            </span>
+            <div className="flex min-w-0 flex-col text-base md:text-[14px] font-light">
+              {groupExhibitions.map((item) => (
+                <Link
+                  key={item.slug}
+                  className={cn(
+                    "block truncate transition-colors hover:font-normal capitalize",
+                    pathname === `/exhibitions/group/${item.slug}` &&
+                      "font-medium",
+                  )}
+                  href={`/exhibitions/group/${item.slug}`}
+                  onClick={onNavigate}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
   )

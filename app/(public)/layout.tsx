@@ -5,8 +5,8 @@ import { supabaseServer } from "@/lib/server"
 
 const navLinks = [
   { href: "/works", label: "works" },
-  { href: "/texts", label: "text" },
-  { href: "/cv", label: "cv" },
+  { href: "/about", label: "About" },
+  { href: "/texts", label: "Text" },
 ]
 
 const normalizeTitle = (value?: string | null) => (value ?? "").trim()

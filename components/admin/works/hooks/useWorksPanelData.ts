@@ -14,6 +14,7 @@ import { supabaseBrowser } from "@/lib/client"
 export type WorkPreviewItem = {
   id: string
   imageUrl: string
+  slug: string
   title: string
   caption: string
   year: number | null
@@ -46,7 +47,7 @@ export const useWorksPanelData = () => {
     try {
       const { data: artworks, error: artworksError } = await supabase
         .from("artworks")
-        .select("id, title, year, display_order, created_at")
+        .select("id, slug, title, year, display_order, created_at")
         .eq("category", "works")
         .order("display_order", { ascending: false })
         .order("created_at", { ascending: false })
@@ -90,6 +91,7 @@ export const useWorksPanelData = () => {
           return {
             id: item.id,
             imageUrl: publicData.publicUrl,
+            slug: item.slug ?? "",
             title: item.title ?? "",
             caption: primaryImage.caption ?? "",
             year: item.year ?? null,
@@ -117,8 +119,12 @@ export const useWorksPanelData = () => {
         setErrorMessage("Select an image to upload.")
         return
       }
+      if (!isEditMode && !values.slug.trim()) {
+        setErrorMessage("Simple title is required.")
+        return
+      }
       if (!values.title.trim()) {
-        setErrorMessage("Title is required.")
+        setErrorMessage("Detailed title is required.")
         return
       }
       if (!values.caption.trim()) {
@@ -156,6 +162,9 @@ export const useWorksPanelData = () => {
           formData.append("file", values.imageFile)
         }
         formData.append("year", resolvedYear)
+        if (!isEditMode) {
+          formData.append("slug", values.slug)
+        }
         formData.append("title", values.title)
         formData.append("caption", values.caption)
 
@@ -261,6 +270,7 @@ export const useWorksPanelData = () => {
       return {
         imageUrl: editingItem.imageUrl,
         year: editingItem.year ? String(editingItem.year) : "",
+        slug: editingItem.slug,
         title: editingItem.title,
         caption: editingItem.caption,
       }

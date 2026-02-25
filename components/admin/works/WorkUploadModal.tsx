@@ -30,6 +30,7 @@ import { formatFileSize, maxImageFileSizeBytes } from "@/lib/fileUpload"
 export type WorkFormValues = {
   imageFile: File | null
   year: string
+  slug: string
   title: string
   caption: string
 }
@@ -46,6 +47,7 @@ type WorkUploadModalProps = {
   initialValues?: {
     imageUrl?: string
     year?: string
+    slug?: string
     title?: string
     caption?: string
   }
@@ -79,6 +81,7 @@ export default function WorkUploadModal({
     initialValues?.imageUrl ?? "",
   )
   const [year, setYear] = useState(initialValues?.year ?? "")
+  const [slugTitle, setSlugTitle] = useState(initialValues?.slug ?? "")
   const [titleValue, setTitleValue] = useState(initialValues?.title ?? "")
   const [caption, setCaption] = useState(initialValues?.caption ?? "")
   const wasSubmittingRef = useRef(false)
@@ -95,6 +98,7 @@ export default function WorkUploadModal({
     setImageFile(null)
     setImagePreviewUrl("")
     setYear(initialValues?.year ?? "")
+    setSlugTitle(initialValues?.slug ?? "")
     setTitleValue(initialValues?.title ?? "")
     setCaption(initialValues?.caption ?? "")
     setInitialImageUrl(initialValues?.imageUrl ?? "")
@@ -152,6 +156,7 @@ export default function WorkUploadModal({
         setImagePreviewUrl("")
         setImageFile(null)
         setInitialImageUrl("")
+        setSlugTitle("")
         setTitleValue("")
         setCaption("")
         setYear("")
@@ -173,12 +178,26 @@ export default function WorkUploadModal({
       setImageFile(null)
       setInitialImageUrl("")
       setYear("")
+      setSlugTitle("")
       setTitleValue("")
       setCaption("")
     }
 
     onOpenChange(nextOpen)
   }
+
+  const slugify = (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return ""
+    return trimmed
+      .toLowerCase()
+      .replace(/[\s_]+/g, "-")
+      .replace(/[^\p{L}\p{N}-]/gu, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+  }
+
+  const derivedSlug = slugify(slugTitle)
 
   const initialYear = initialValues?.year ?? ""
   const initialTitle = initialValues?.title ?? ""
@@ -269,7 +288,29 @@ export default function WorkUploadModal({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="work-title">Title *</Label>
+              <Label htmlFor="work-slug-title">
+                Simple Title{isEditMode ? "" : " *"}
+              </Label>
+              <Input
+                id="work-slug-title"
+                value={slugTitle}
+                onChange={(event) => setSlugTitle(event.target.value)}
+                placeholder="작업 타이틀을 입력해주세요"
+                disabled={isEditMode}
+              />
+              <div className="flex flex-col gap-0">
+                <div className="text-xs text-muted-foreground">
+                  *위 타이틀은 메뉴바에 들어갈 타이틀로 최초 업로드 후 수정이
+                  불가능 합니다.
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  영문, 국문 모두 가능합니다. 간결하게 띄어쓰기에 유의하여
+                  작성해주세요.
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="work-title">Detailed Title *</Label>
               <Textarea
                 id="work-title"
                 value={titleValue}
@@ -277,6 +318,10 @@ export default function WorkUploadModal({
                 placeholder="작업 타이틀을 입력해주세요"
                 className="min-h-[60px]"
               />
+              <div className="text-xs text-muted-foreground">
+                *작업 세부페이지에 들어가는 타이틀을 입력해주세요. 영문, 국문
+                특수문자 포함 가능합니다.
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="work-caption">Caption *</Label>
@@ -308,6 +353,7 @@ export default function WorkUploadModal({
                 onSave?.({
                   imageFile,
                   year,
+                  slug: derivedSlug,
                   title: titleValue,
                   caption,
                 })

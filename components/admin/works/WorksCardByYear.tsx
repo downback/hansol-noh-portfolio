@@ -63,9 +63,9 @@ export default function WorksCardByYear({
       </CardHeader>
       <CardContent className="space-y-2 text-sm text-muted-foreground">
         {isLoading ? (
-          <p className="text-xs text-muted-foreground">Loading work previews...</p>
+          <p className="text-xs text-muted-foreground">Loading works...</p>
         ) : orderedItems.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No work previews yet.</p>
+          <p className="text-xs text-muted-foreground">No works yet.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {orderedItems.map((item, index) => (
