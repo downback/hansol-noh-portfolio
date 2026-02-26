@@ -3,7 +3,6 @@
 import ExhibitionUploadModal from "@/components/admin/exhibition/ExhibitionUploadModal"
 import ExhibitionCardByCategory from "@/components/admin/exhibition/ExhibitionCardByCategory"
 import { useExhibitionsPanelData } from "@/components/admin/exhibition/hooks/useExhibitionsPanelData"
-import { useExhibitionsReorder } from "@/components/admin/exhibition/hooks/useExhibitionsReorder"
 
 export default function ExhibitionsPanel() {
   const {
@@ -12,9 +11,6 @@ export default function ExhibitionsPanel() {
     isUploading,
     isLoadingPreviewItems,
     errorMessage,
-    setErrorMessage,
-    previewItems,
-    setPreviewItems,
     editingItem,
     resetSignal,
     selectedCategory,
@@ -24,23 +20,8 @@ export default function ExhibitionsPanel() {
     handleSave,
     handleDelete,
     handleEdit,
-    loadPreviewItems,
     openAddModal,
   } = useExhibitionsPanelData()
-
-  const {
-    dragOverIndex,
-    dragCategory,
-    handleDragStart,
-    handleDragOver,
-    handleDrop,
-    handleDragLeave,
-  } = useExhibitionsReorder({
-    previewItems,
-    setPreviewItems,
-    setErrorMessage,
-    loadPreviewItems,
-  })
 
   return (
     <div className="space-y-6">
@@ -49,34 +30,22 @@ export default function ExhibitionsPanel() {
         category="solo-exhibitions"
         items={soloItems}
         isLoading={isLoadingPreviewItems}
-        dragOverIndex={dragOverIndex}
-        dragCategory={dragCategory}
         onAdd={openAddModal}
         onEdit={(item) => {
           void handleEdit(item)
         }}
         onDelete={(item) => handleDelete(item)}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
       />
       <ExhibitionCardByCategory
         title="Group exhibitions"
         category="group-exhibitions"
         items={groupItems}
         isLoading={isLoadingPreviewItems}
-        dragOverIndex={dragOverIndex}
-        dragCategory={dragCategory}
         onAdd={openAddModal}
         onEdit={(item) => {
           void handleEdit(item)
         }}
         onDelete={(item) => handleDelete(item)}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
       />
       <ExhibitionUploadModal
         key={`exhibition-modal-${resetSignal}`}

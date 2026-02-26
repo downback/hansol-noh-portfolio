@@ -9,6 +9,10 @@ import {
   uploadStorageFile,
   uploadStorageFilesWithRollback,
 } from "@/lib/server/storageTransaction"
+import {
+  getNextDisplayOrder,
+  insertUnifiedWorkOrder,
+} from "@/lib/server/unifiedWorkOrder"
 
 type ExecuteExhibitionCreateFlowInput = {
   supabase: ServerSupabaseClient
@@ -59,27 +63,22 @@ export const executeExhibitionCreateFlow = async ({
 
   let exhibitionId = existingExhibition?.id ?? null
   if (!exhibitionId) {
-    const { data: latestExhibition, error: latestError } = await supabase
-      .from("exhibitions")
-      .select("display_order")
-      .eq("type", exhibitionType)
-      .order("display_order", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (latestError) {
+    let nextDisplayOrder: number
+    try {
+      nextDisplayOrder = await getNextDisplayOrder(supabase)
+    } catch (orderError) {
       return {
         ok: false,
         status: 500,
         error: mapSupabaseErrorMessage({
-          message: latestError.message,
-          tableHint: "exhibitions",
+          message:
+            orderError instanceof Error ? orderError.message : "Order lookup failed",
+          tableHint: "unified_work_order",
           fallbackMessage: "Unable to save exhibition entry.",
         }),
       }
     }
 
-    const nextDisplayOrder = (latestExhibition?.display_order ?? -1) + 1
     const { data: insertedExhibition, error: insertError } = await supabase
       .from("exhibitions")
       .insert({
@@ -87,7 +86,6 @@ export const executeExhibitionCreateFlow = async ({
         title: exhibitionTitle,
         slug,
         description: description || null,
-        display_order: nextDisplayOrder,
       })
       .select("id")
       .single()
@@ -104,6 +102,29 @@ export const executeExhibitionCreateFlow = async ({
       }
     }
     exhibitionId = insertedExhibition.id
+
+    try {
+      await insertUnifiedWorkOrder(
+        supabase,
+        "exhibition",
+        exhibitionId,
+        nextDisplayOrder,
+      )
+    } catch (orderInsertError) {
+      await supabase.from("exhibitions").delete().eq("id", exhibitionId)
+      return {
+        ok: false,
+        status: 500,
+        error: mapSupabaseErrorMessage({
+          message:
+            orderInsertError instanceof Error
+              ? orderInsertError.message
+              : "Order insert failed",
+          tableHint: "unified_work_order",
+          fallbackMessage: "Unable to save exhibition entry.",
+        }),
+      }
+    }
   } else {
     const { error: updateError } = await supabase
       .from("exhibitions")

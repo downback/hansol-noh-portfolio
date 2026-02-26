@@ -10,6 +10,7 @@ import {
   removeStoragePathsSafely,
   uploadStorageFile,
 } from "@/lib/server/storageTransaction"
+import { deleteUnifiedWorkOrder } from "@/lib/server/unifiedWorkOrder"
 import {
   insertAdditionalWorkImages,
   removeAdditionalWorkImages,
@@ -322,6 +323,8 @@ export async function DELETE(_: Request, { params }: RouteContext) {
         { status: 500 },
       )
     }
+
+    await deleteUnifiedWorkOrder(supabase, "work", id)
 
     await removeStoragePathsSafely({
       supabase,

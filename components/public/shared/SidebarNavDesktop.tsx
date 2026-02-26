@@ -4,10 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import SidebarNavContent from "@/components/public/shared/SidebarNavContent"
 
-type ExhibitionItem = {
-  title: string
-  slug: string
-}
+type SidebarWorkItem = { slug: string; href: string; key: string }
 
 type NavLink = {
   href: string
@@ -15,16 +12,12 @@ type NavLink = {
 }
 
 type SidebarNavDesktopProps = {
-  works: ExhibitionItem[]
-  soloExhibitions: ExhibitionItem[]
-  groupExhibitions: ExhibitionItem[]
+  sidebarWorkItems: SidebarWorkItem[]
   navLinks: NavLink[]
 }
 
 export default function SidebarNavDesktop({
-  works,
-  soloExhibitions,
-  groupExhibitions,
+  sidebarWorkItems,
   navLinks,
 }: SidebarNavDesktopProps) {
   const pathname = usePathname()
@@ -38,9 +31,7 @@ export default function SidebarNavDesktop({
       </div>
       <div className="flex-auto overflow-y-auto hide-scrollbar">
         <SidebarNavContent
-          works={works}
-          soloExhibitions={soloExhibitions}
-          groupExhibitions={groupExhibitions}
+          sidebarWorkItems={sidebarWorkItems}
           navLinks={navLinks}
           pathname={pathname}
           className="px-8 pb-6"

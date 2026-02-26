@@ -6,6 +6,7 @@ import {
 } from "@/lib/constants"
 import { buildStoragePathWithPrefix } from "@/lib/storage"
 import { insertActivityLog, requireAdminUser } from "@/lib/server/adminRoute"
+import { deleteUnifiedWorkOrder } from "@/lib/server/unifiedWorkOrder"
 import { toSlug } from "@/lib/utils"
 import {
   insertAdditionalExhibitionImages,
@@ -404,6 +405,8 @@ export async function DELETE(_: Request, { params }: RouteContext) {
         { status: 500 },
       )
     }
+
+    await deleteUnifiedWorkOrder(supabase, "exhibition", imageRow.exhibition_id)
 
     await insertActivityLog(supabase, {
       adminId: user.id,

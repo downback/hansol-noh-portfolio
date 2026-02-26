@@ -1,13 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 
-type WorkItem = {
-  title: string
-  slug: string
-}
+type SidebarWorkItem = { slug: string; href: string; key: string }
 
 type NavLink = {
   href: string
@@ -15,59 +11,22 @@ type NavLink = {
 }
 
 type SidebarNavContentProps = {
-  works: WorkItem[]
-  soloExhibitions: WorkItem[]
-  groupExhibitions: WorkItem[]
+  sidebarWorkItems: SidebarWorkItem[]
   navLinks: NavLink[]
   pathname: string
   className?: string
   onNavigate?: () => void
 }
 
-type UnifiedWorkLink = {
-  label: string
-  href: string
-  key: string
-}
-
 const formatSlugForDisplay = (slug: string) => slug.replace(/-/g, " ")
 
-function buildUnifiedWorkLinks(
-  works: WorkItem[],
-  soloExhibitions: WorkItem[],
-  groupExhibitions: WorkItem[],
-): UnifiedWorkLink[] {
-  const workLinks: UnifiedWorkLink[] = works.map((item) => ({
-    label: formatSlugForDisplay(item.slug),
-    href: `/works/${item.slug}`,
-    key: `work-${item.slug}`,
-  }))
-  const soloLinks: UnifiedWorkLink[] = soloExhibitions.map((item) => ({
-    label: formatSlugForDisplay(item.slug),
-    href: `/exhibitions/${item.slug}`,
-    key: `solo-${item.slug}`,
-  }))
-  const groupLinks: UnifiedWorkLink[] = groupExhibitions.map((item) => ({
-    label: formatSlugForDisplay(item.slug),
-    href: `/exhibitions/${item.slug}`,
-    key: `group-${item.slug}`,
-  }))
-  return [...workLinks, ...soloLinks, ...groupLinks]
-}
-
 export default function SidebarNavContent({
-  works,
-  soloExhibitions,
-  groupExhibitions,
+  sidebarWorkItems,
   navLinks,
   pathname,
   className,
   onNavigate,
 }: SidebarNavContentProps) {
-  const unifiedWorkLinks = useMemo(
-    () => buildUnifiedWorkLinks(works, soloExhibitions, groupExhibitions),
-    [works, soloExhibitions, groupExhibitions],
-  )
 
   return (
     <nav className={cn("flex flex-col h-full font-light space-y-4", className)}>
@@ -94,12 +53,12 @@ export default function SidebarNavContent({
           WORKS
         </span>
         <div className="flex flex-col gap-0.5">
-          {unifiedWorkLinks.length === 0 ? (
+          {sidebarWorkItems.length === 0 ? (
             <span className="text-sm text-muted-foreground py-1">
               No works yet
             </span>
           ) : (
-            unifiedWorkLinks.map((item) => (
+            sidebarWorkItems.map((item) => (
               <Link
                 key={item.key}
                 className={cn(
@@ -108,9 +67,9 @@ export default function SidebarNavContent({
                 )}
                 href={item.href}
                 onClick={onNavigate}
-                title={item.label}
+                title={formatSlugForDisplay(item.slug)}
               >
-                {item.label}
+                {formatSlugForDisplay(item.slug)}
               </Link>
             ))
           )}

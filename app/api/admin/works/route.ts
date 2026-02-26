@@ -14,6 +14,10 @@ import {
   removeStoragePathsSafely,
   uploadStorageFile,
 } from "@/lib/server/storageTransaction"
+import {
+  getNextDisplayOrder,
+  insertUnifiedWorkOrder,
+} from "@/lib/server/unifiedWorkOrder"
 import { insertAdditionalWorkImages } from "@/lib/server/workMutation"
 import { supabaseServer } from "@/lib/server"
 import { validateImageUploadFile } from "@/lib/uploadValidation"
@@ -125,15 +129,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: latestArtwork, error: latestError } = await supabase
-      .from("artworks")
-      .select("display_order")
-      .eq("category", "works")
-      .order("display_order", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (latestError) {
+    let nextDisplayOrder: number
+    try {
+      nextDisplayOrder = await getNextDisplayOrder(supabase)
+    } catch (orderError) {
       await removeStoragePathsSafely({
         supabase,
         bucketName,
@@ -141,13 +140,13 @@ export async function POST(request: Request) {
         logContext: "Work create rollback",
       })
       return createMappedSupabaseErrorResponse({
-        message: latestError.message,
-        tableHint: "artworks",
+        message:
+          orderError instanceof Error ? orderError.message : "Order lookup failed",
+        tableHint: "unified_work_order",
         fallbackMessage: "Unable to save work entry.",
       })
     }
 
-    const nextDisplayOrder = (latestArtwork?.display_order ?? -1) + 1
     const { data: artwork, error: artworkError } = await supabase
       .from("artworks")
       .insert({
@@ -155,7 +154,6 @@ export async function POST(request: Request) {
         year,
         slug: normalizedSlug,
         title: normalizedTitle,
-        display_order: nextDisplayOrder,
       })
       .select("id, created_at")
       .single()
@@ -195,6 +193,27 @@ export async function POST(request: Request) {
       return createMappedSupabaseErrorResponse({
         message: artworkImageError.message,
         tableHint: "artwork_images",
+        fallbackMessage: "Unable to save work entry.",
+      })
+    }
+
+    try {
+      await insertUnifiedWorkOrder(supabase, "work", artwork.id, nextDisplayOrder)
+    } catch (orderInsertError) {
+      await removeStoragePathsSafely({
+        supabase,
+        bucketName,
+        storagePaths: [storagePath],
+        logContext: "Work create unified order rollback",
+      })
+      await supabase.from("artwork_images").delete().eq("artwork_id", artwork.id)
+      await supabase.from("artworks").delete().eq("id", artwork.id)
+      return createMappedSupabaseErrorResponse({
+        message:
+          orderInsertError instanceof Error
+            ? orderInsertError.message
+            : "Order insert failed",
+        tableHint: "unified_work_order",
         fallbackMessage: "Unable to save work entry.",
       })
     }

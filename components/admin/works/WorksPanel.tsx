@@ -26,7 +26,6 @@ export default function WorksPanel() {
     handleAdd,
     handleEdit,
     handleDelete,
-    handleReorder,
     handleYearConfirm,
   } = useWorksPanelData()
 
@@ -47,9 +46,6 @@ export default function WorksPanel() {
               onAdd={() => handleAdd(year)}
               onEdit={handleEdit}
               onDelete={(item) => handleDelete(item)}
-              onReorder={(orderedItems) => {
-                void handleReorder(year, orderedItems)
-              }}
             />
           ))}
         </div>

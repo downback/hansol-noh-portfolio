@@ -48,12 +48,21 @@ export const useWorksPanelData = () => {
   const loadPreviewItems = useCallback(async () => {
     setIsLoadingPreviewItems(true)
     try {
+      const { data: orderRows } = await supabase
+        .from("unified_work_order")
+        .select("entity_id, display_order")
+        .eq("entity_type", "work")
+        .order("display_order", { ascending: false })
+
+      const orderedIds = orderRows?.map((r) => r.entity_id) ?? []
+      const orderMap = new Map(
+        orderedIds.map((id, i) => [id, orderedIds.length - i]),
+      )
+
       const { data: artworks, error: artworksError } = await supabase
         .from("artworks")
-        .select("id, slug, title, year, display_order, created_at")
+        .select("id, slug, title, year, created_at")
         .eq("category", "works")
-        .order("display_order", { ascending: false })
-        .order("created_at", { ascending: false })
 
       if (artworksError) {
         console.error("Failed to load work previews", { error: artworksError })
@@ -83,7 +92,17 @@ export const useWorksPanelData = () => {
         (primaryImages ?? []).map((image) => [image.artwork_id, image]),
       )
 
-      const nextItems = (artworks ?? [])
+      const sortedArtworks = [...(artworks ?? [])].sort((a, b) => {
+        const orderA = orderMap.get(a.id) ?? 999999
+        const orderB = orderMap.get(b.id) ?? 999999
+        if (orderA !== orderB) return orderA - orderB
+        return (
+          new Date(b.created_at ?? 0).getTime() -
+          new Date(a.created_at ?? 0).getTime()
+        )
+      })
+
+      const nextItems = sortedArtworks
         .map((item) => {
           const primaryImage = primaryImageByArtworkId.get(item.id)
           if (!primaryImage?.storage_path) return null
@@ -98,7 +117,7 @@ export const useWorksPanelData = () => {
             title: item.title ?? "",
             caption: primaryImage.caption ?? "",
             year: item.year ?? null,
-            displayOrder: item.display_order ?? 0,
+            displayOrder: orderMap.get(item.id) ?? 0,
             createdAt: item.created_at ?? new Date().toISOString(),
           }
         })
@@ -423,44 +442,6 @@ export const useWorksPanelData = () => {
     [loadPreviewItems],
   )
 
-  const handleReorder = useCallback(
-    async (yearLabel: string, orderedItems: WorkPreviewItem[]) => {
-      const nextOrderMap = new Map(
-        orderedItems.map((item, index) => [
-          item.id,
-          orderedItems.length - index,
-        ]),
-      )
-      setPreviewItems((prev) =>
-        prev.map((item) =>
-          nextOrderMap.has(item.id)
-            ? { ...item, displayOrder: nextOrderMap.get(item.id) ?? 0 }
-            : item,
-        ),
-      )
-
-      try {
-        const response = await fetch("/api/admin/works/reorder", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            yearLabel,
-            orderedWorkIds: orderedItems.map((item) => item.id),
-          }),
-        })
-        if (!response.ok) {
-          const payload = (await response.json()) as { error?: string }
-          throw new Error(payload.error || "Unable to reorder works.")
-        }
-      } catch (error) {
-        console.error("Failed to persist works order", { error })
-        setErrorMessage("Unable to save the work order. Please try again.")
-        await loadPreviewItems()
-      }
-    },
-    [loadPreviewItems],
-  )
-
   const handleYearConfirm = useCallback((nextYear: string) => {
     setErrorMessage("")
     setManualYears((prev) =>
@@ -487,7 +468,6 @@ export const useWorksPanelData = () => {
     handleAdd,
     handleEdit,
     handleDelete,
-    handleReorder,
     handleYearConfirm,
   }
 }

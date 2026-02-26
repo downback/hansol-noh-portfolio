@@ -470,3 +470,39 @@ for each row execute function public.set_updated_at();
 
 -- Add caption column if hero_image already exists without it
 alter table public.hero_image add column if not exists caption text;
+
+-- ============================================================
+-- Unified Work Order (works + exhibitions in one list)
+-- Run AFTER clearing artworks and exhibitions content
+-- ============================================================
+
+-- 1) Create unified_work_order table
+create table if not exists public.unified_work_order (
+  id uuid primary key default gen_random_uuid(),
+  entity_type text not null check (entity_type in ('work', 'exhibition')),
+  entity_id uuid not null,
+  display_order int not null,
+  created_at timestamptz not null default now(),
+  unique (entity_type, entity_id)
+);
+
+create index idx_unified_work_order_order
+  on public.unified_work_order (display_order);
+
+alter table public.unified_work_order enable row level security;
+
+create policy "unified_work_order_public_read"
+  on public.unified_work_order for select using (true);
+
+create policy "unified_work_order_admin_write"
+  on public.unified_work_order for all
+  using (auth.uid() = (select admin_user_id from public.app_admin where singleton_id = true))
+  with check (auth.uid() = (select admin_user_id from public.app_admin where singleton_id = true));
+
+-- 2) Drop display_order from artworks (run after content cleared)
+-- drop index if exists idx_artworks_category_order;
+-- alter table public.artworks drop column if exists display_order;
+
+-- 3) Drop display_order from exhibitions (run after content cleared)
+-- drop index if exists idx_exhibitions_type_order;
+-- alter table public.exhibitions drop column if exists display_order;

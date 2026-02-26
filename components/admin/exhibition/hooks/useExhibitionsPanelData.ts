@@ -34,10 +34,20 @@ export const useExhibitionsPanelData = () => {
   const loadPreviewItems = useCallback(async () => {
     setIsLoadingPreviewItems(true)
     try {
+      const { data: orderRows } = await supabase
+        .from("unified_work_order")
+        .select("entity_id, display_order")
+        .eq("entity_type", "exhibition")
+        .order("display_order", { ascending: true })
+
+      const orderMap = new Map(
+        (orderRows ?? []).map((r, i) => [r.entity_id, i]),
+      )
+
       const { data, error } = await supabase
         .from("exhibition_images")
         .select(
-          "id, storage_path, caption, display_order, created_at, is_primary, exhibitions ( id, title, type, slug, display_order, description )",
+          "id, storage_path, caption, display_order, created_at, is_primary, exhibitions ( id, title, type, slug, description )",
         )
 
       if (error) {
@@ -68,7 +78,7 @@ export const useExhibitionsPanelData = () => {
                 : "group-exhibitions",
             description: exhibition.description ?? "",
             exhibitionTitle: exhibition.title ?? "",
-            exhibitionOrder: exhibition.display_order ?? 0,
+            exhibitionOrder: orderMap.get(exhibition.id) ?? 999999,
             imageOrder: item.display_order ?? 0,
             createdAt: item.created_at ?? new Date().toISOString(),
           }
