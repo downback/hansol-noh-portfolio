@@ -78,10 +78,7 @@ export default function UnifiedOrderPanel() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-medium">Order</h2>
-      <p className="text-sm text-muted-foreground">
-        Drag and drop to reorder works and exhibitions in the sidebar.
-      </p>
+      <h2 className="text-lg font-medium">메뉴바 순서 변경하기</h2>
       {errorMessage ? (
         <p className="text-sm text-destructive">{errorMessage}</p>
       ) : null}
@@ -117,14 +114,14 @@ export default function UnifiedOrderPanel() {
               <div className="flex items-center text-muted-foreground">
                 <GripVertical className="h-4 w-4" />
               </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-xs text-muted-foreground uppercase mr-2">
+              <div className="min-w-0 flex-1 flex flex-row items-center">
+                <span className="inline-block min-w-20 shrink-0 text-xs text-muted-foreground uppercase mr-2">
                   {item.entityType}
                 </span>
-                <span className="text-sm truncate">
+                <span className="inline-block min-w-0 truncate text-sm capitalize">
                   {item.slug
                     ? formatSlugForDisplay(item.slug)
-                    : item.title ?? "Untitled"}
+                    : (item.title ?? "Untitled")}
                 </span>
               </div>
             </div>
@@ -132,7 +129,10 @@ export default function UnifiedOrderPanel() {
         </div>
       )}
       {items.length > 0 ? (
-        <p className="text-xs text-muted-foreground">Drag rows to reorder</p>
+        <p className="text-xs text-muted-foreground">
+          순서 변경을 원하시는 Work 또는 Exhibition 항목을 드래그하여 원하는
+          위치에 놓으면 메뉴바의 해당 항목의 순서가 변경됩니다.
+        </p>
       ) : null}
     </div>
   )

@@ -21,13 +21,13 @@ const pageConfigs: Record<string, PageConfig> = {
   "/admin/main": {
     title: "Main Page",
     description: "Main page에 이미지를 추가하거나 수정, 삭제하실 수 있습니다",
-    viewLink: "/main",
+    viewLink: "/",
   },
   "/admin/works": {
     title: "Works",
     description:
       "Works page에 새로운 작품을 추가하거나 수정, 삭제하실 수 있습니다",
-    viewLink: "/works",
+    viewLink: "/",
   },
   "/admin/exhibitions": {
     title: "Exhibitions",
@@ -35,17 +35,22 @@ const pageConfigs: Record<string, PageConfig> = {
       "Exhibitions page에 새로운 전시 정보를 추가하거나 수정, 삭제하실 수 있습니다",
     viewLink: "/",
   },
-  "/admin/cv": {
-    title: "CV",
+  "/admin/about": {
+    title: "About",
     description:
-      "CV page에 새로운 이력을 추가하거나 수정, 삭제하실 수 있습니다",
-    viewLink: "/cv",
+      "About page에 새로운 이력을 추가하거나 수정, 삭제하실 수 있습니다",
+    viewLink: "/about",
   },
   "/admin/text": {
     title: "Text",
     description:
       "Texts page에 새로운 텍스트를 추가하거나 수정, 삭제하실 수 있습니다",
     viewLink: "/texts",
+  },
+  "/admin/order": {
+    title: "Order",
+    description: "메뉴바의 Works와 Exhibitions 순서를 변경할 수 있습니다.",
+    viewLink: "/",
   },
 }
 
