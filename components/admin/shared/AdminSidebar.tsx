@@ -26,7 +26,7 @@ const adminNavLinks = [
   { href: "/admin/works", label: "Works", icon: FolderOpen },
   { href: "/admin/exhibitions", label: "Exhibitions", icon: Calendar },
   { href: "/admin/text", label: "Text", icon: FileText },
-  { href: "/admin/cv", label: "CV", icon: UserCircle },
+  { href: "/admin/about", label: "About", icon: UserCircle },
 ]
 
 export default function AdminSidebar() {

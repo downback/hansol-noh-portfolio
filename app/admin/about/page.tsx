@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const dynamic = "force-dynamic"
 
-export default function AdminBiography() {
+export default function AdminAbout() {
   return (
     <div className="space-y-6">
       <div className="">

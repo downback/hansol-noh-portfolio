@@ -2,96 +2,169 @@
 
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import HeroSelectModal, {
-  type HeroArtworkOption,
-} from "@/components/admin/main/HeroSelectModal"
+import HeroUploadModal from "@/components/admin/main/HeroUploadModal"
+import AdminDialog from "@/components/admin/shared/AdminDialog"
 
 type AdminMainImagePreviewPanelProps = {
   heroImageUrl?: string | null
-  heroArtworkId?: string | null
-  artworkOptions: HeroArtworkOption[]
+  heroCaption?: string | null
 }
 
 export default function AdminMainImagePreviewPanel({
   heroImageUrl,
-  heroArtworkId,
-  artworkOptions,
+  heroCaption,
 }: AdminMainImagePreviewPanelProps) {
-  const [isSelectOpen, setIsSelectOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
+  const [modalCaption, setModalCaption] = useState("")
   const [currentImageUrl, setCurrentImageUrl] = useState(heroImageUrl ?? "")
-  const [selectedArtworkId, setSelectedArtworkId] = useState<string | null>(
-    null,
-  )
+  const [currentCaption, setCurrentCaption] = useState(heroCaption ?? "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  const router = useRouter()
 
-  const updateHero = async (artworkId: string | null) => {
+  const handleUpload = async (file: File, caption: string) => {
     setIsSubmitting(true)
     setErrorMessage("")
 
     try {
-      const response = await fetch("/api/admin/hero-artwork", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ artworkId }),
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("caption", caption)
+
+      const response = await fetch("/api/admin/hero-image", {
+        method: "POST",
+        body: formData,
       })
 
-      const payload = (await response.json()) as { error?: string }
+      const payload = (await response.json()) as {
+        publicUrl?: string
+        error?: string
+      }
 
       if (!response.ok) {
-        setErrorMessage(payload.error || "Unable to update hero image.")
+        setErrorMessage(payload.error || "Unable to upload hero image.")
         return
       }
 
-      if (artworkId) {
-        const selectedOption = artworkOptions.find((o) => o.id === artworkId)
-        if (selectedOption) {
-          setCurrentImageUrl(selectedOption.imageUrl)
-        }
-      } else {
-        setCurrentImageUrl("")
+      if (payload.publicUrl) {
+        setCurrentImageUrl(payload.publicUrl)
       }
+      setCurrentCaption(caption)
+      setModalCaption("")
 
-      setSelectedArtworkId(null)
-      setIsSelectOpen(false)
+      setIsModalOpen(false)
+      router.refresh()
     } catch (error) {
-      console.error("Failed to update hero image", { error })
-      setErrorMessage("Unable to update the hero image. Please try again.")
+      console.error("Failed to upload hero image", { error })
+      setErrorMessage("Unable to upload the hero image. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleConfirm = async () => {
-    if (!selectedArtworkId) {
-      setErrorMessage("Select an artwork.")
-      return
+  const handleClear = async () => {
+    setIsSubmitting(true)
+    setErrorMessage("")
+
+    try {
+      const response = await fetch("/api/admin/hero-image", {
+        method: "DELETE",
+      })
+
+      const payload = (await response.json()) as { error?: string }
+
+      if (!response.ok) {
+        setErrorMessage(payload.error || "Unable to clear hero image.")
+        return
+      }
+
+      setCurrentImageUrl("")
+      setCurrentCaption("")
+      setModalCaption("")
+      setIsModalOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error("Failed to clear hero image", { error })
+      setErrorMessage("Unable to clear the hero image. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-    await updateHero(selectedArtworkId)
   }
 
-  const handleClear = async () => {
-    await updateHero(null)
+  const handleSaveCaption = async (caption: string) => {
+    setIsSubmitting(true)
+    setErrorMessage("")
+
+    try {
+      const response = await fetch("/api/admin/hero-image", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caption }),
+      })
+
+      const payload = (await response.json()) as { error?: string }
+
+      if (!response.ok) {
+        setErrorMessage(payload.error || "Unable to update caption.")
+        return
+      }
+
+      setCurrentCaption(caption)
+      setModalCaption("")
+
+      setIsModalOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error("Failed to update hero caption", { error })
+      setErrorMessage("Unable to update the caption. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>메인 이미지 선택 | 수정 | 삭제</CardTitle>
-        <Button
-          type="button"
-          variant="highlight"
-          onClick={() => {
-            setErrorMessage("")
-            setSelectedArtworkId(heroArtworkId ?? null)
-            setIsSelectOpen(true)
-          }}
-        >
-          <span className="hidden md:inline">Change image</span>
-          <span className="md:hidden">Change</span>
-        </Button>
+        <CardTitle>메인 이미지 업로드 | 수정 | 삭제</CardTitle>
+        <div className="flex items-center gap-2">
+          <AdminDialog
+            open={isClearDialogOpen}
+            onOpenChange={setIsClearDialogOpen}
+            onConfirm={handleClear}
+            trigger={
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsClearDialogOpen(true)}
+                disabled={isSubmitting || !currentImageUrl}
+              >
+                Clear hero
+              </Button>
+            }
+            title="Delete hero image?"
+            description="삭제 후 복구할 수 없습니다. 진행하시겠습니까?"
+            confirmLabel="Delete"
+            loadingLabel="Deleting..."
+            showCancel={true}
+            variant="destructive"
+          />
+          <Button
+            type="button"
+            variant="highlight"
+            onClick={() => {
+              setErrorMessage("")
+              setModalCaption("")
+              setIsModalOpen(true)
+            }}
+          >
+            <span className="hidden md:inline">Change image</span>
+            <span className="md:hidden">Change</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="grid gap-6 md:grid-cols-3 max-w-5xl">
         <div className="space-y-3 md:col-span-2">
@@ -136,17 +209,27 @@ export default function AdminMainImagePreviewPanel({
             )}
           </div>
         </div>
+        <div className="flex flex-row gap-2">
+          <p className="text-sm font-medium">Caption text :</p>
+          {currentCaption ? (
+            <p className="text-sm text-muted-foreground">{currentCaption}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">
+              No caption text yet
+            </p>
+          )}
+        </div>
       </CardContent>
-      <HeroSelectModal
-        open={isSelectOpen}
-        onOpenChange={setIsSelectOpen}
-        title="Select hero image"
-        description="Choose an artwork to use as the main hero image."
-        options={artworkOptions}
-        selectedArtworkId={selectedArtworkId}
-        onSelect={setSelectedArtworkId}
-        onConfirm={handleConfirm}
-        onClear={handleClear}
+      <HeroUploadModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title="Upload hero image"
+        description="Upload a new image for the main page hero. This image is used only on the main page and will not appear in works."
+        captionValue={modalCaption}
+        onCaptionChange={setModalCaption}
+        onUpload={handleUpload}
+        onSaveCaption={handleSaveCaption}
+        hasExistingHero={!!currentImageUrl}
         confirmLabel="Save"
         isSubmitting={isSubmitting}
         errorMessage={errorMessage}

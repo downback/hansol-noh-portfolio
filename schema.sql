@@ -446,3 +446,27 @@ add column slug text not null unique;
 
 alter table public.artworks
 add column is_hero boolean not null default false;
+
+-- Hero image (standalone, not in works)
+create table if not exists public.hero_image (
+  singleton_id boolean primary key default true,
+  storage_path text not null,
+  caption text,
+  updated_at timestamptz not null default now(),
+  constraint hero_image_singleton check (singleton_id = true)
+);
+
+alter table public.hero_image enable row level security;
+
+create policy "hero_image_public_read" on public.hero_image for select using (true);
+
+create policy "hero_image_admin_write" on public.hero_image for all
+using (auth.uid() = (select admin_user_id from public.app_admin where singleton_id = true))
+with check (auth.uid() = (select admin_user_id from public.app_admin where singleton_id = true));
+
+create trigger hero_image_set_updated_at
+before update on public.hero_image
+for each row execute function public.set_updated_at();
+
+-- Add caption column if hero_image already exists without it
+alter table public.hero_image add column if not exists caption text;
