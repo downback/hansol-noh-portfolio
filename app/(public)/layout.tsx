@@ -93,7 +93,7 @@ export default async function PublicLayout({
   const groupExhibitions = buildExhibitions(groupRows ?? [])
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <div className="flex w-full flex-col md:sticky md:top-0 md:h-screen md:w-xs xl:w-sm md:shrink-0 md:overflow-y-auto">
+      <div className="flex w-full flex-col md:sticky md:top-0 md:h-screen md:w-2xs xl:w-xs md:shrink-0 md:overflow-y-auto">
         <SidebarNavDesktop
           works={works}
           soloExhibitions={soloExhibitions}
@@ -108,8 +108,9 @@ export default async function PublicLayout({
         />
       </div>
       <main className="flex-auto md:w-auto">
-        <div className="px-6 mb-32  md:py-0 md:mt-28 md:pr-8">{children}</div>
+        <div className="">{children}</div>
       </main>
     </div>
   )
 }
+// px-6 mb-32 mt-6 md:py-0 md:pr-8

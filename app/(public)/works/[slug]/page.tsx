@@ -10,9 +10,7 @@ type WorkBySlugPageProps = {
 const formatSlug = (slug: string) => slug.replace(/-/g, " ")
 const bucketName = siteAssetsBucketName
 
-export default async function WorkBySlugPage({
-  params,
-}: WorkBySlugPageProps) {
+export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
   const { slug } = await params
   const supabase = await supabaseServer()
   const { data: artwork, error: artworkError } = await supabase
@@ -77,7 +75,7 @@ export default async function WorkBySlugPage({
     : []
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-6 mb-32 pt-8">
       <DetailSubHeader
         segments={[{ label: "work", value: formatSlug(slug) }]}
       />

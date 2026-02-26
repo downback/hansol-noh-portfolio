@@ -26,8 +26,7 @@
   - Called by public data pages such as:
     - `app/(public)/layout.tsx`
     - `app/(public)/works/[year]/page.tsx`
-    - `app/(public)/exhibitions/solo/[slug]/page.tsx`
-    - `app/(public)/exhibitions/group/[slug]/page.tsx`
+    - `app/(public)/exhibitions/[slug]/page.tsx`
     - `app/(public)/cv/page.tsx`
     - `app/(public)/texts/page.tsx`
   - Called by admin server pages such as `app/admin/page.tsx`.

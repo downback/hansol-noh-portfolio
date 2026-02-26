@@ -18,6 +18,11 @@ const pageConfigs: Record<string, PageConfig> = {
       "포트폴리오 웹사이트에 새로운 이미지 | 텍스트를 추가하거나 수정하실 수 있는 관리자 페이지입니다",
     viewLink: "/",
   },
+  "/admin/main": {
+    title: "Main Page",
+    description: "Main page에 이미지를 추가하거나 수정, 삭제하실 수 있습니다",
+    viewLink: "/main",
+  },
   "/admin/works": {
     title: "Works",
     description:

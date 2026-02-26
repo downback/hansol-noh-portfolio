@@ -13,7 +13,7 @@ Portfolio website with a single-admin CMS built on Next.js + Supabase.
 
 - Public portfolio pages:
   - Works by year (`/works/[year]`)
-  - Solo/group exhibitions (`/exhibitions/solo/[slug]`, `/exhibitions/group/[slug]`)
+  - Exhibitions (`/exhibitions/[slug]`)
   - Text archive (`/texts`)
   - CV (`/cv`)
 - Admin CMS (`/admin`) for:

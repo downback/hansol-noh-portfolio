@@ -30,10 +30,10 @@ export default function SidebarNavDesktop({
   const pathname = usePathname()
 
   return (
-    <aside className="hidden md:flex md:w-xs xl:w-sm shrink-0 min-h-screen flex-col">
-      <div className="px-8 py-8 flex-none">
-        <Link href="/" className="text-base font-medium ">
-          Hansol Noh
+    <aside className="hidden md:flex shrink-0 min-h-screen flex-col ">
+      <div className="px-8 pt-8 flex-none">
+        <Link href="/" className="text-base font-semibold">
+          HANSOL NOH
         </Link>
       </div>
       <div className="flex-auto overflow-y-auto hide-scrollbar">

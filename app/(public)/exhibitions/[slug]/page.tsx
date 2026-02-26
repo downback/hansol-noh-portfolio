@@ -3,27 +3,24 @@ import DetailSubHeader from "@/components/public/shared/DetailSubHeader"
 import { siteAssetsBucketName } from "@/lib/constants"
 import { supabaseServer } from "@/lib/server"
 
-type SoloExhibitionPageProps = {
+type ExhibitionPageProps = {
   params: Promise<{ slug: string }>
 }
 
 const formatSlug = (slug: string) => slug.replace(/-/g, " ")
 const bucketName = siteAssetsBucketName
 
-export default async function SoloExhibitionPage({
-  params,
-}: SoloExhibitionPageProps) {
+export default async function ExhibitionPage({ params }: ExhibitionPageProps) {
   const { slug } = await params
   const supabase = await supabaseServer()
   const { data: exhibition, error: exhibitionError } = await supabase
     .from("exhibitions")
     .select("id, title, slug, description")
-    .eq("type", "solo")
     .eq("slug", slug)
     .maybeSingle()
 
   if (exhibitionError) {
-    console.error("Failed to load solo exhibition", { slug, error: exhibitionError })
+    console.error("Failed to load exhibition", { slug, error: exhibitionError })
   }
 
   const { data: imageRows, error: imagesError } = await supabase
@@ -33,7 +30,7 @@ export default async function SoloExhibitionPage({
     .order("display_order", { ascending: true })
 
   if (imagesError) {
-    console.error("Failed to load solo exhibition images", {
+    console.error("Failed to load exhibition images", {
       slug,
       error: imagesError,
     })
@@ -65,7 +62,7 @@ export default async function SoloExhibitionPage({
   const items = mainImage
     ? [
         {
-          id: `solo-${slug}`,
+          id: `exhibition-${slug}`,
           title: exhibitionTitle,
           caption: mainImage.alt,
           description: exhibitionDescription,
@@ -79,10 +76,11 @@ export default async function SoloExhibitionPage({
         },
       ]
     : []
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-6 mb-32 pt-8">
       <DetailSubHeader
-        segments={[{ label: "solo exhibition", value: formatSlug(slug) }]}
+        segments={[{ label: "exhibition", value: exhibitionTitle }]}
       />
       <ExhibitionList items={items} />
     </div>

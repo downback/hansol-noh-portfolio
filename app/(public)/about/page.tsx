@@ -79,7 +79,7 @@ export default async function Bio() {
   const awardsItems = mapItems(awardsRows ?? [])
   const collectionsItems = mapItems(collectionsRows ?? [])
   return (
-    <div className="font-light">
+    <div className="font-light px-6 mb-32 pt-8 ">
       <DetailSubHeader segments={[{ label: "cv" }]} />
       <div className="flex md:flex-row flex-col w-full">
         <div className="md:flex-1">

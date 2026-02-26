@@ -8,8 +8,7 @@
 
 - `/` (empty landing shell)
 - `/works/[year]`
-- `/exhibitions/solo/[slug]`
-- `/exhibitions/group/[slug]`
+- `/exhibitions/[slug]`
 - `/texts`
 - `/cv`
 

@@ -443,3 +443,6 @@ create index idx_activity_log_admin_created
 
 alter table public.artworks
 add column slug text not null unique;
+
+alter table public.artworks
+add column is_hero boolean not null default false;

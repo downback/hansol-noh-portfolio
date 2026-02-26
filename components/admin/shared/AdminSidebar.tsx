@@ -13,6 +13,7 @@ import {
   FileText,
   Calendar,
   User,
+  Home,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ import { useToast } from "@/components/ui/use-toast"
 
 const adminNavLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/main", label: "Main", icon: Home },
   { href: "/admin/works", label: "Works", icon: FolderOpen },
   { href: "/admin/exhibitions", label: "Exhibitions", icon: Calendar },
   { href: "/admin/text", label: "Text", icon: FileText },

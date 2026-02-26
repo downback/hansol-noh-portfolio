@@ -30,24 +30,26 @@ type UnifiedWorkLink = {
   key: string
 }
 
+const formatSlugForDisplay = (slug: string) => slug.replace(/-/g, " ")
+
 function buildUnifiedWorkLinks(
   works: WorkItem[],
   soloExhibitions: WorkItem[],
   groupExhibitions: WorkItem[],
 ): UnifiedWorkLink[] {
   const workLinks: UnifiedWorkLink[] = works.map((item) => ({
-    label: item.title,
+    label: formatSlugForDisplay(item.slug),
     href: `/works/${item.slug}`,
     key: `work-${item.slug}`,
   }))
   const soloLinks: UnifiedWorkLink[] = soloExhibitions.map((item) => ({
-    label: item.title,
-    href: `/exhibitions/solo/${item.slug}`,
+    label: formatSlugForDisplay(item.slug),
+    href: `/exhibitions/${item.slug}`,
     key: `solo-${item.slug}`,
   }))
   const groupLinks: UnifiedWorkLink[] = groupExhibitions.map((item) => ({
-    label: item.title,
-    href: `/exhibitions/group/${item.slug}`,
+    label: formatSlugForDisplay(item.slug),
+    href: `/exhibitions/${item.slug}`,
     key: `group-${item.slug}`,
   }))
   return [...workLinks, ...soloLinks, ...groupLinks]
@@ -68,7 +70,7 @@ export default function SidebarNavContent({
   )
 
   return (
-    <nav className={cn("flex flex-col h-full font-light", className)}>
+    <nav className={cn("flex flex-col h-full font-light space-y-4", className)}>
       <div className="flex flex-col">
         {navLinks
           .filter((link) => link.href !== "/works")
@@ -76,7 +78,7 @@ export default function SidebarNavContent({
             <Link
               key={link.href}
               className={cn(
-                "transition-colors hover:font-normal text-base md:text-[14px]",
+                "transition-colors hover:font-normal text-sm md:text-[14px]",
                 pathname === link.href && "font-medium",
               )}
               href={link.href}
@@ -87,9 +89,9 @@ export default function SidebarNavContent({
           ))}
       </div>
 
-      <div className="space-y-2">
-        <span className="text-sm inline-block w-full border-b-[0.9px] border-black">
-          work
+      <div className="">
+        <span className="text-sm md:text-[14px] inline-block w-full font-semibold">
+          WORKS
         </span>
         <div className="flex flex-col gap-0.5">
           {unifiedWorkLinks.length === 0 ? (
@@ -101,8 +103,8 @@ export default function SidebarNavContent({
               <Link
                 key={item.key}
                 className={cn(
-                  "block truncate py-0.5 transition-colors hover:font-normal text-base md:text-[14px] font-light capitalize",
-                  pathname === item.href && "font-medium",
+                  "block truncate transition-colors hover:text-black/20 text-sm md:text-[12px] font-light capitalize",
+                  pathname === item.href && "font-medium hover:text-black",
                 )}
                 href={item.href}
                 onClick={onNavigate}

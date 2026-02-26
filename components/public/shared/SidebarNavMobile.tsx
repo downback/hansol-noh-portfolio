@@ -80,11 +80,11 @@ export default function SidebarNavMobile({
       {/* Header */}
       <header className="flex items-start pl-6 pt-8 pb-6">
         <Link
-          className="text-base font-medium"
+          className="text-base font-semibold"
           href="/"
           onClick={closeMobileNav}
         >
-          Hansol Noh
+          HANSOL NOH
         </Link>
 
         <Button
@@ -109,8 +109,8 @@ export default function SidebarNavMobile({
           style={{ height: "100dvh" }}
         >
           {/* Overlay Header */}
-          <div className="flex items-start justify-between pl-6 pt-8 pb-6 shrink-0">
-            <div className="text-base font-medium">Hansol Noh</div>
+          <div className="flex items-start justify-between pl-6 pt-8 pb-4 shrink-0">
+            <div className="text-base font-semibold">HANSOL NOH</div>
             <Button
               variant="default"
               size="icon"
@@ -132,7 +132,7 @@ export default function SidebarNavMobile({
               "overflow-y-auto",
               "hide-scrollbar",
               "overscroll-contain", // prevents scroll chaining
-              "px-8 pb-6",
+              "px-6 pb-6",
             )}
           >
             <SidebarNavContent

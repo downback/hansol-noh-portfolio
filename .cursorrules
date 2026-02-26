@@ -41,8 +41,7 @@
 
 - Public pages:
   - `app/(public)/works/[year]/page.tsx`
-  - `app/(public)/exhibitions/solo/[slug]/page.tsx`
-  - `app/(public)/exhibitions/group/[slug]/page.tsx`
+  - `app/(public)/exhibitions/[slug]/page.tsx`
   - `app/(public)/texts/page.tsx`
   - `app/(public)/cv/page.tsx`
 - Admin pages:
