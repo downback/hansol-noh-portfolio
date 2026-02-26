@@ -26,31 +26,29 @@ export default async function Hero() {
     heroImageUrl = data?.publicUrl ?? null
   }
 
+  if (!heroImageUrl) {
+    return null
+  }
+
   return (
     <div className="fixed inset-0 md:relative -z-10 h-screen max-h-screen overflow-hidden">
       <div className="flex h-full w-full flex-col items-center justify-center">
-        <div className="flex items-center justify-center w-[80vw] max-h-[70vh] md:w-auto md:max-h-[70vh]">
-          {heroImageUrl ? (
-            <Image
-              src={heroImageUrl}
-              alt="Hero image"
-              width={1920}
-              height={1080}
-              className="max-h-[70vh] w-auto object-contain"
-              priority
-              sizes="(max-width: 768px) 80vw, 70vh"
-            />
-          ) : (
-            <div className="flex h-[60vh] w-full items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 text-sm text-muted-foreground">
-              No hero image available
-            </div>
-          )}
+        <div className="hidden md:flex md:max-h-[75vh] md:w-auto flex-col items-end justify-center">
+          <Image
+            src={heroImageUrl}
+            alt="Hero image"
+            width={1920}
+            height={1080}
+            className="md:max-h-[75vh] md:w-auto object-contain"
+            priority
+            sizes="(max-width: 1920px) 80vw, 75vh"
+          />
+          {heroCaption ? (
+            <p className="mt-4 w-full text-right text-sm font-light md:text-[12px] ml-auto">
+              {heroCaption}
+            </p>
+          ) : null}
         </div>
-        {heroCaption ? (
-          <p className="mt-4 text-center text-xs sm:text-sm font-light text-muted-foreground">
-            {heroCaption}
-          </p>
-        ) : null}
       </div>
     </div>
   )

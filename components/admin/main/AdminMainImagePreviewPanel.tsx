@@ -86,6 +86,7 @@ export default function AdminMainImagePreviewPanel({
       setCurrentCaption("")
       setModalCaption("")
       setIsModalOpen(false)
+      setIsClearDialogOpen(false)
       router.refresh()
     } catch (error) {
       console.error("Failed to clear hero image", { error })
@@ -135,6 +136,7 @@ export default function AdminMainImagePreviewPanel({
             open={isClearDialogOpen}
             onOpenChange={setIsClearDialogOpen}
             onConfirm={handleClear}
+            isLoading={isSubmitting}
             trigger={
               <Button
                 type="button"
