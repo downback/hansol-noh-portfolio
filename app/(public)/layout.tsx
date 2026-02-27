@@ -12,12 +12,12 @@ const navLinks = [
 
 const normalizeSlug = (value?: string | null) => (value ?? "").trim()
 
-type SidebarWorkItem = { slug: string; href: string; key: string }
+type SidebarWorkItem = { slug: string; href: string; key: string; title: string }
 
 function buildSidebarWorkItems(
   orderRows: { entity_type: string; entity_id: string }[],
-  worksById: Map<string, { slug?: string | null }>,
-  exhibitionsById: Map<string, { slug?: string | null }>,
+  worksById: Map<string, { slug?: string | null; title?: string | null }>,
+  exhibitionsById: Map<string, { slug?: string | null; title?: string | null }>,
 ): SidebarWorkItem[] {
   const seen = new Set<string>()
   return orderRows
@@ -35,7 +35,8 @@ function buildSidebarWorkItems(
           ? `/works/${slug}`
           : `/exhibitions/${slug}`
       const key = `${row.entity_type}-${slug}`
-      return { slug, href, key }
+      const title = (meta?.title ?? "").trim() || slug.replace(/-/g, " ")
+      return { slug, href, key, title }
     })
     .filter((item): item is SidebarWorkItem => Boolean(item))
 }
@@ -82,10 +83,10 @@ export default async function PublicLayout({
 
   const [worksResult, exhibitionsResult] = await Promise.all([
     workIds.length > 0
-      ? supabase.from("artworks").select("id, slug").in("id", workIds)
+      ? supabase.from("artworks").select("id, slug, title").in("id", workIds)
       : { data: [] },
     exhibitionIds.length > 0
-      ? supabase.from("exhibitions").select("id, slug").in("id", exhibitionIds)
+      ? supabase.from("exhibitions").select("id, slug, title").in("id", exhibitionIds)
       : { data: [] },
   ])
 

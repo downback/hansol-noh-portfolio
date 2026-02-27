@@ -84,6 +84,7 @@ export default function ExhibitionUploadModal({
   const [removedAdditionalImageIds, setRemovedAdditionalImageIds] = useState<
     string[]
   >([])
+  const [exhibitionTitleError, setExhibitionTitleError] = useState("")
   const [errorDialogOpen, setErrorDialogOpen] = useState(false)
   const [errorDialogMessage, setErrorDialogMessage] = useState("")
   const {
@@ -114,6 +115,7 @@ export default function ExhibitionUploadModal({
     setExistingAdditionalImages(initialValues?.additionalImages ?? [])
     setRemovedAdditionalImageIds([])
     setAdditionalImages([])
+    setExhibitionTitleError("")
   }, [clearPreviews, initialValues])
 
   const handleRemoveAdditionalImage = (indexToRemove: number) => {
@@ -173,9 +175,34 @@ export default function ExhibitionUploadModal({
       setAdditionalImages([])
       setExistingAdditionalImages([])
       setRemovedAdditionalImageIds([])
+      setExhibitionTitleError("")
     }
 
     onOpenChange(nextOpen)
+  }
+
+  const slugify = (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return ""
+    return trimmed
+      .toLowerCase()
+      .replace(/[\s_]+/g, "-")
+      .replace(/[^\p{L}\p{N}-]/gu, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+  }
+
+  const derivedExhibitionSlug = slugify(exhibitionTitle)
+  const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const validateExhibitionTitle = (): string | null => {
+    const trimmed = derivedExhibitionSlug.trim()
+    if (!trimmed) {
+      return "전시 타이틀을 입력해주세요."
+    }
+    if (!slugPattern.test(trimmed)) {
+      return "영문 소문자, 숫자, 하이픈만 사용할 수 있습니다. (e.g. exhibition1, exhibition2025-1)"
+    }
+    return null
   }
 
   const initialExhibitionTitle = initialValues?.exhibitionTitle ?? ""
@@ -243,28 +270,38 @@ export default function ExhibitionUploadModal({
               ) : null}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="exhibition-title">Exhibition title *</Label>
+              <Label htmlFor="exhibition-title">전시 타이틀 *</Label>
               <Input
                 id="exhibition-title"
                 value={exhibitionTitle}
-                onChange={(event) => setExhibitionTitle(event.target.value)}
-                placeholder="메뉴바에 들어갈 전시 타이틀을 입력해주세요"
+                onChange={(event) => {
+                  setExhibitionTitle(event.target.value)
+                  setExhibitionTitleError("")
+                }}
+                placeholder="메뉴바에 들어갈 전시 타이틀을 영문으로 입력해주세요"
                 disabled={isEditMode}
               />
-              <div className="flex flex-col gap-0">
-                <div className="text-xs text-muted-foreground">
-                  *위 타이틀은 메뉴바에 들어갈 타이틀로 최초 업로드 후 수정이
-                  불가능 합니다.
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  가능한 영문으로 간결하게 띄어쓰기에 유의하여 특수문자 없이
+              {exhibitionTitleError ? (
+                <p className="text-xs text-rose-600">{exhibitionTitleError}</p>
+              ) : null}
+              <div className="flex flex-col gap-0 text-xs text-muted-foreground">
+                <div>
+                  *위 타이틀은 url에 들어갈 타이틀로 영문으로 특수문자 없이
                   작성해주세요.
+                </div>
+                <div>
+                  **영문 타이틀이 없을 경우 exhibition1, exhibition2025-1 등으로
+                  작성해주세요.
+                </div>
+                <div>
+                  ***최초 업로드 후 수정이 불가능 하며, 중복되는 타이틀은 사용할
+                  수 없습니다.
                 </div>
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="exhibition-caption">
-                Exhibition information *
+                전시 한글 타이틀 혹은 세부 정보 *
               </Label>
               <Textarea
                 id="exhibition-caption"
@@ -275,9 +312,7 @@ export default function ExhibitionUploadModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="exhibition-description">
-                Exhibition description
-              </Label>
+              <Label htmlFor="exhibition-description">전시 텍스트</Label>
               <Textarea
                 id="exhibition-description"
                 value={details}
@@ -362,7 +397,15 @@ export default function ExhibitionUploadModal({
             <Button
               type="button"
               variant="highlight"
-              onClick={() =>
+              onClick={() => {
+                if (!isEditMode) {
+                  const titleValidationError = validateExhibitionTitle()
+                  if (titleValidationError) {
+                    setExhibitionTitleError(titleValidationError)
+                    return
+                  }
+                }
+                setExhibitionTitleError("")
                 onSave?.({
                   mainImageFile,
                   category,
@@ -372,7 +415,7 @@ export default function ExhibitionUploadModal({
                   additionalImages,
                   removedAdditionalImageIds,
                 })
-              }
+              }}
               disabled={isSaveDisabled}
             >
               {isSubmitting ? <SavingDotsLabel /> : confirmLabel}

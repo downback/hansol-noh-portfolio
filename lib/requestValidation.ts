@@ -140,7 +140,8 @@ export const validateTextPayload = (
   if (!parseResult.success) {
     return {
       data: null,
-      errorMessage: parseResult.error.issues[0]?.message || "Invalid request body.",
+      errorMessage:
+        parseResult.error.issues[0]?.message || "Invalid request body.",
     }
   }
 
@@ -160,7 +161,8 @@ export const validateWorkMetadata = (input: {
   if (!parseResult.success) {
     return {
       data: null,
-      errorMessage: parseResult.error.issues[0]?.message || "Invalid request body.",
+      errorMessage:
+        parseResult.error.issues[0]?.message || "Invalid request body.",
     }
   }
 

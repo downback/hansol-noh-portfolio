@@ -3,7 +3,12 @@
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
-type SidebarWorkItem = { slug: string; href: string; key: string }
+type SidebarWorkItem = {
+  slug: string
+  href: string
+  key: string
+  title: string
+}
 
 type NavLink = {
   href: string
@@ -17,8 +22,6 @@ type SidebarNavContentProps = {
   className?: string
   onNavigate?: () => void
 }
-
-const formatSlugForDisplay = (slug: string) => slug.replace(/-/g, " ")
 
 export default function SidebarNavContent({
   sidebarWorkItems,
@@ -36,8 +39,8 @@ export default function SidebarNavContent({
             <Link
               key={link.href}
               className={cn(
-                "transition-colors hover:font-normal text-sm md:text-[14px]",
-                pathname === link.href && "font-medium",
+                "transition-colors hover:text-muted-foreground text-sm md:text-[14px] xl:text-[15px]",
+                pathname === link.href && "font-semibold hover:text-black",
               )}
               href={link.href}
               onClick={onNavigate}
@@ -48,7 +51,7 @@ export default function SidebarNavContent({
       </div>
 
       <div className="">
-        <span className="text-sm md:text-[14px] inline-block w-full font-semibold">
+        <span className="text-sm md:text-[14px] xl:text-[15px] inline-block w-full font-semibold">
           WORKS
         </span>
         <div className="flex flex-col gap-0.5">
@@ -61,14 +64,14 @@ export default function SidebarNavContent({
               <Link
                 key={item.key}
                 className={cn(
-                  "block truncate transition-colors hover:text-black/20 text-sm md:text-[12px] font-light capitalize",
-                  pathname === item.href && "font-medium hover:text-black",
+                  "block truncate transition-colors hover:text-muted-foreground text-sm md:text-[12px] font-light capitalize",
+                  pathname === item.href && "font-semibold hover:text-black",
                 )}
                 href={item.href}
                 onClick={onNavigate}
-                title={formatSlugForDisplay(item.slug)}
+                title={item.title}
               >
-                {formatSlugForDisplay(item.slug)}
+                {item.title}
               </Link>
             ))
           )}

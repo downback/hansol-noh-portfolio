@@ -5,8 +5,10 @@ Public
   - [x] order
 - [x] Main
 - [x] additional images of one work
+- [x] hero image mobile
+
 - [ ] text page ui
-- [ ] hero image mobile
+- [ ] 전시, 작업 detail page ui 통합 및 수정
 
 Admin
 

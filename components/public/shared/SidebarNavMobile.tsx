@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import SidebarNavContent from "@/components/public/shared/SidebarNavContent"
 
-type SidebarWorkItem = { slug: string; href: string; key: string }
+type SidebarWorkItem = { slug: string; href: string; key: string; title: string }
 
 type NavLink = {
   href: string

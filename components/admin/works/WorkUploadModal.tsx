@@ -96,6 +96,7 @@ export default function WorkUploadModal({
   const [removedAdditionalImageIds, setRemovedAdditionalImageIds] = useState<
     string[]
   >([])
+  const [slugError, setSlugError] = useState("")
   const wasSubmittingRef = useRef(false)
   const [errorDialogOpen, setErrorDialogOpen] = useState(false)
   const [errorDialogMessage, setErrorDialogMessage] = useState("")
@@ -139,6 +140,7 @@ export default function WorkUploadModal({
     setExistingAdditionalImages(initialValues?.additionalImages ?? [])
     setRemovedAdditionalImageIds([])
     setAdditionalImages([])
+    setSlugError("")
   }, [clearPreviews, initialValues])
 
   const handleAcceptedImageFile = useCallback((file: File) => {
@@ -201,6 +203,7 @@ export default function WorkUploadModal({
         setAdditionalImages([])
         setExistingAdditionalImages([])
         setRemovedAdditionalImageIds([])
+        setSlugError("")
       }, 0)
     }
 
@@ -243,6 +246,18 @@ export default function WorkUploadModal({
   }
 
   const derivedSlug = slugify(slugTitle)
+
+  const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const validateSlug = (): string | null => {
+    const trimmed = derivedSlug.trim()
+    if (!trimmed) {
+      return "url에 들어갈 영문 타이틀을 입력해주세요."
+    }
+    if (!slugPattern.test(trimmed)) {
+      return "영문 소문자, 숫자, 하이픈만 사용할 수 있습니다. (e.g. work1, work2025-1)."
+    }
+    return null
+  }
 
   const initialYear = initialValues?.year ?? ""
   const initialTitle = initialValues?.title ?? ""
@@ -336,28 +351,38 @@ export default function WorkUploadModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="work-slug-title">
-                Simple Title{isEditMode ? "" : " *"}
+                English Title{isEditMode ? "" : " *"}
               </Label>
               <Input
                 id="work-slug-title"
                 value={slugTitle}
-                onChange={(event) => setSlugTitle(event.target.value)}
+                onChange={(event) => {
+                  setSlugTitle(event.target.value)
+                  setSlugError("")
+                }}
                 placeholder="작업 타이틀을 입력해주세요"
                 disabled={isEditMode}
               />
-              <div className="flex flex-col gap-0">
-                <div className="text-xs text-muted-foreground">
-                  *위 타이틀은 메뉴바에 들어갈 타이틀로 최초 업로드 후 수정이
-                  불가능 합니다.
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  영문, 국문 모두 가능합니다. 간결하게 띄어쓰기에 유의하여
+              {slugError ? (
+                <p className="text-xs text-rose-600">{slugError}</p>
+              ) : null}
+              <div className="flex flex-col gap-0 text-xs text-muted-foreground">
+                <div>
+                  *위 타이틀은 url에 들어갈 타이틀로 영문으로 특수문자 없이
                   작성해주세요.
+                </div>
+                <div>
+                  **영문 타이틀이 없을 경우 work1, work2025-1 등으로
+                  작성해주세요.
+                </div>
+                <div>
+                  ***최초 업로드 후 수정이 불가능 하며, 중복되는 타이틀은 사용할
+                  수 없습니다.
                 </div>
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="work-title">Detailed Title *</Label>
+              <Label htmlFor="work-title">Title *</Label>
               <Textarea
                 id="work-title"
                 value={titleValue}
@@ -456,7 +481,15 @@ export default function WorkUploadModal({
             <Button
               type="button"
               variant="highlight"
-              onClick={() =>
+              onClick={() => {
+                if (!isEditMode) {
+                  const slugValidationError = validateSlug()
+                  if (slugValidationError) {
+                    setSlugError(slugValidationError)
+                    return
+                  }
+                }
+                setSlugError("")
                 onSave?.({
                   imageFile,
                   year,
@@ -466,7 +499,7 @@ export default function WorkUploadModal({
                   additionalImages,
                   removedAdditionalImageIds,
                 })
-              }
+              }}
               disabled={isSaveDisabled}
             >
               {isSubmitting ? <SavingDotsLabel /> : confirmLabel}

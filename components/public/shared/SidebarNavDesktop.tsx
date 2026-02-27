@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import SidebarNavContent from "@/components/public/shared/SidebarNavContent"
 
-type SidebarWorkItem = { slug: string; href: string; key: string }
+type SidebarWorkItem = { slug: string; href: string; key: string; title: string }
 
 type NavLink = {
   href: string
