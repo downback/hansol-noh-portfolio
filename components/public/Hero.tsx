@@ -44,7 +44,7 @@ export default async function Hero() {
             sizes="(max-width: 1920px) 80vw, 75vh"
           />
           {heroCaption ? (
-            <p className="mt-4 w-full text-right text-sm font-light md:text-[12px] ml-auto">
+            <p className="mt-4 w-full text-left text-sm font-light md:text-[12px] ml-auto">
               {heroCaption}
             </p>
           ) : null}

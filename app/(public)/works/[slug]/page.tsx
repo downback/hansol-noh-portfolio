@@ -1,4 +1,4 @@
-import ExhibitionList from "@/components/public/ExhibitionList"
+import ArtworkList from "@/components/public/ArtworkList"
 import DetailSubHeader from "@/components/public/shared/DetailSubHeader"
 import { siteAssetsBucketName } from "@/lib/constants"
 import { supabaseServer } from "@/lib/server"
@@ -60,11 +60,10 @@ export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
     ? [
         {
           id: `work-${slug}`,
-          title: workTitle,
-          caption: mainImage.alt,
-          description: "",
           mainImageSrc: mainImage.src,
           mainImageAlt: mainImage.alt,
+          title: workTitle,
+          caption: mainImage.alt,
           detailImages: detailImages.map((image) => ({
             id: image.id,
             src: image.src,
@@ -79,7 +78,7 @@ export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
       <DetailSubHeader
         segments={[{ label: "work", value: formatSlug(slug) }]}
       />
-      <ExhibitionList items={items} />
+      <ArtworkList items={items} />
     </div>
   )
 }

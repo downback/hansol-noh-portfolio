@@ -83,21 +83,27 @@ export default async function Bio() {
       <DetailSubHeader segments={[{ label: "cv" }]} />
       <div className="flex md:flex-row flex-col w-full">
         <div className="md:flex-1">
-          <div className="text-[14px] font-medium mb-2 mt-2 md:mt-0">
-            Hansol Noh
+          <div className="text-[14px] font-bold mb-2 mt-2 md:mt-0">
+            ➤ 노한솔 (b. 1991)
           </div>
-          <div className="text-sm/4 font-light">1991 출생</div>
-          <div className="text-sm/4 font-light">born in 1991</div>
-          <Link
-            href="https://www.instagram.com/instagram_handle/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1 text-xs text-black hover:text-red-500 transition-colors"
-            aria-label="Visit Instagram profile"
-          >
-            <Instagram className="h-4 w-4" strokeWidth={1} />
-            <span>@instagram_handle</span>
-          </Link>
+          <div className="flex flex-col mt-3 gap-1">
+            <Link
+              href="mailto:hsol023@naver.com"
+              className="inline-flex items-center gap-1 text-xs text-black hover:text-black/60 hover:translate-x-0.5 transition-colors"
+              aria-label="Send email"
+            >
+              <span>hsol023@naver.com</span>
+            </Link>
+            <Link
+              href="https://www.instagram.com/letsthinksoftly"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-black hover:text-black/60 hover:translate-x-0.5 transition-colors"
+              aria-label="Visit Instagram profile"
+            >
+              <span>@letsthinksoftly</span>
+            </Link>
+          </div>
         </div>
         <div className="mt-12 md:mt-0 md:flex-5 xl:flex-4  flex flex-col gap-16 md:gap-24">
           <div className="flex flex-col gap-4 md:gap-6">

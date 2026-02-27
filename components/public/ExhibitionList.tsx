@@ -26,7 +26,7 @@ export default function ExhibitionList({
       {items.map((item) => (
         <div
           key={item.id}
-          className="mx-auto w-full md:w-lg xl:max-w-3xl space-y-4"
+          className="mx-auto w-full md:w-lg xl:w-2xl space-y-4"
         >
           <div className="w-full">
             <LightboxImage
@@ -40,11 +40,15 @@ export default function ExhibitionList({
             />
           </div>
 
-          <div className="px-1 text-sm md:text-[13px] font-light whitespace-pre-wrap">
+          <div className="text-left px-1 text-sm md:text-[14px] font-bold whitespace-pre-wrap">
             {item.caption}
           </div>
 
-          <div className="flex flex-col gap-6 mt-12 md:mt-24">
+          <div className="text-left px-1 text-sm md:text-[14px] font-light whitespace-pre-wrap">
+            {item.description}
+          </div>
+
+          <div className="flex flex-col gap-8 mt-12 md:mt-16">
             {(item.detailImages ?? []).map((image) => (
               <div key={image.id} className=" w-full">
                 <LightboxImage
@@ -58,10 +62,6 @@ export default function ExhibitionList({
                 />
               </div>
             ))}
-          </div>
-
-          <div className="px-1 text-sm md:text-[14px] font-light whitespace-pre-wrap">
-            {item.description}
           </div>
         </div>
       ))}

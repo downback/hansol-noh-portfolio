@@ -389,7 +389,6 @@ export const useWorksPanelData = () => {
       setSelectedYear(nextYear)
       setSelectedYearCategory(nextCategory)
       setErrorMessage("")
-      setIsUploadOpen(true)
 
       const { data, error } = await supabase
         .from("artwork_images")
@@ -401,23 +400,23 @@ export const useWorksPanelData = () => {
       if (error) {
         console.error("Failed to load work additional images", { error })
         setEditingAdditionalImages([])
-        return
+      } else {
+        const additionalImages = (data ?? [])
+          .filter((img) => img.storage_path)
+          .map((img) => {
+            const { data: publicData } = supabase.storage
+              .from(bucketName)
+              .getPublicUrl(img.storage_path)
+            return {
+              id: img.id,
+              url: publicData?.publicUrl ?? "",
+            }
+          })
+          .filter((img) => img.url.length > 0)
+        setEditingAdditionalImages(additionalImages)
       }
 
-      const additionalImages = (data ?? [])
-        .filter((img) => img.storage_path)
-        .map((img) => {
-          const { data: publicData } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(img.storage_path)
-          return {
-            id: img.id,
-            url: publicData?.publicUrl ?? "",
-          }
-        })
-        .filter((img) => img.url.length > 0)
-
-      setEditingAdditionalImages(additionalImages)
+      setIsUploadOpen(true)
     },
     [bucketName, rangeEnd, rangeLabel, rangeStart, supabase],
   )
