@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { siteAssetsBucketName } from "@/lib/constants"
 import SidebarNavDesktop from "@/components/public/shared/SidebarNavDesktop"
 import SidebarNavMobile from "@/components/public/shared/SidebarNavMobile"
 import { supabaseServer } from "@/lib/server"
@@ -45,13 +46,29 @@ export default async function PublicLayout({
   children: ReactNode
 }) {
   const supabase = await supabaseServer()
-  const { data: orderRows, error: orderError } = await supabase
-    .from("unified_work_order")
-    .select("entity_type, entity_id")
-    .order("display_order", { ascending: true })
+  const [orderResult, heroResult] = await Promise.all([
+    supabase
+      .from("unified_work_order")
+      .select("entity_type, entity_id")
+      .order("display_order", { ascending: true }),
+    supabase
+      .from("hero_image")
+      .select("storage_path")
+      .eq("singleton_id", true)
+      .maybeSingle(),
+  ])
 
+  const { data: orderRows, error: orderError } = orderResult
   if (orderError) {
     console.error("Failed to load unified order", { error: orderError })
+  }
+
+  let heroImageUrl: string | null = null
+  if (heroResult.data?.storage_path) {
+    const { data } =     supabase.storage
+      .from(siteAssetsBucketName)
+      .getPublicUrl(heroResult.data.storage_path)
+    heroImageUrl = data?.publicUrl ?? null
   }
 
   const workIds =
@@ -94,6 +111,7 @@ export default async function PublicLayout({
         <SidebarNavMobile
           sidebarWorkItems={sidebarWorkItems}
           navLinks={navLinks}
+          heroImageUrl={heroImageUrl}
         />
       </div>
       <main className="flex-auto md:w-auto">

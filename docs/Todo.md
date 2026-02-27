@@ -1,11 +1,13 @@
 Public
 
-- [ ] Nav bar
-  - [ ] db change
-  - [ ] order
-- [ ] Main
-- [ ] additional images of one work
+- [x] Nav bar
+  - [x] db change
+  - [x] order
+- [x] Main
+- [x] additional images of one work
+- [ ] text page ui
+- [ ] hero image mobile
 
 Admin
 
-- [ ] order
+- [x] order

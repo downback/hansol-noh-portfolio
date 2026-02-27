@@ -27,7 +27,6 @@ export default function SidebarNavContent({
   className,
   onNavigate,
 }: SidebarNavContentProps) {
-
   return (
     <nav className={cn("flex flex-col h-full font-light space-y-4", className)}>
       <div className="flex flex-col">
