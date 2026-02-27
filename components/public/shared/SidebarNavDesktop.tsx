@@ -4,7 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import SidebarNavContent from "@/components/public/shared/SidebarNavContent"
 
-type SidebarWorkItem = { slug: string; href: string; key: string; title: string }
+type SidebarWorkItem = {
+  slug: string
+  href: string
+  key: string
+  title: string
+}
 
 type NavLink = {
   href: string
@@ -25,7 +30,7 @@ export default function SidebarNavDesktop({
   return (
     <aside className="hidden md:flex shrink-0 min-h-screen flex-col ">
       <div className="px-8 pt-8 flex-none">
-        <Link href="/" className="text-base font-semibold">
+        <Link href="/" className="text-base font-extrabold">
           HANSOL NOH
         </Link>
       </div>

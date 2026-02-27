@@ -25,7 +25,7 @@ export default async function Contact() {
   return (
     <div className="space-y-4 px-6 mb-3 pt-8">
       <DetailSubHeader segments={[{ label: "text" }]} />
-      <div className="w-full flex justify-end items-start">
+      <div className="w-full flex justify-star items-start">
         <TextList items={items} />
       </div>
     </div>

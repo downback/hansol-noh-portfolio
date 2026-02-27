@@ -12,7 +12,12 @@ const navLinks = [
 
 const normalizeSlug = (value?: string | null) => (value ?? "").trim()
 
-type SidebarWorkItem = { slug: string; href: string; key: string; title: string }
+type SidebarWorkItem = {
+  slug: string
+  href: string
+  key: string
+  title: string
+}
 
 function buildSidebarWorkItems(
   orderRows: { entity_type: string; entity_id: string }[],
@@ -31,9 +36,7 @@ function buildSidebarWorkItems(
       if (seen.has(slug)) return null
       seen.add(slug)
       const href =
-        row.entity_type === "work"
-          ? `/works/${slug}`
-          : `/exhibitions/${slug}`
+        row.entity_type === "work" ? `/works/${slug}` : `/exhibitions/${slug}`
       const key = `${row.entity_type}-${slug}`
       const title = (meta?.title ?? "").trim() || slug.replace(/-/g, " ")
       return { slug, href, key, title }
@@ -66,7 +69,7 @@ export default async function PublicLayout({
 
   let heroImageUrl: string | null = null
   if (heroResult.data?.storage_path) {
-    const { data } =     supabase.storage
+    const { data } = supabase.storage
       .from(siteAssetsBucketName)
       .getPublicUrl(heroResult.data.storage_path)
     heroImageUrl = data?.publicUrl ?? null
@@ -86,13 +89,14 @@ export default async function PublicLayout({
       ? supabase.from("artworks").select("id, slug, title").in("id", workIds)
       : { data: [] },
     exhibitionIds.length > 0
-      ? supabase.from("exhibitions").select("id, slug, title").in("id", exhibitionIds)
+      ? supabase
+          .from("exhibitions")
+          .select("id, slug, title")
+          .in("id", exhibitionIds)
       : { data: [] },
   ])
 
-  const worksById = new Map(
-    (worksResult.data ?? []).map((w) => [w.id, w]),
-  )
+  const worksById = new Map((worksResult.data ?? []).map((w) => [w.id, w]))
   const exhibitionsById = new Map(
     (exhibitionsResult.data ?? []).map((e) => [e.id, e]),
   )
@@ -116,7 +120,7 @@ export default async function PublicLayout({
         />
       </div>
       <main className="flex-auto md:w-auto">
-        <div className="">{children}</div>
+        <div className="md:mt-22 mt-6">{children}</div>
       </main>
     </div>
   )

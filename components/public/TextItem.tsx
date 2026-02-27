@@ -1,44 +1,37 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronUp, Plus } from "lucide-react"
 
 type TextItemProps = {
   year: string
   title: string
   body: string
-  defaultOpen?: boolean
 }
 
-export default function TextItem({
-  year,
-  title,
-  body,
-  defaultOpen = false,
-}: TextItemProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen)
+export default function TextItem({ year, title, body }: TextItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className="w-full border-b-[0.9px] border-black py-2">
+    <div className="w-full pb-6">
+      <div className="flex items-baseline gap-4 flex-1 min-w-0 mb-4">
+        <span className="text-sm font-bold truncate">➤ {title}</span>
+        <span className="text-xs font-light">{year}</span>
+      </div>
+      <div
+        className={`text-[14px] font-normal whitespace-pre-wrap ${
+          isExpanded ? "" : "line-clamp-4"
+        }`}
+      >
+        {body}
+      </div>
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between gap-4 text-left"
-        aria-expanded={isOpen}
+        onClick={() => setIsExpanded((prev) => !prev)}
+        className="mt-2 text-sm font-light underline hover:text-black/60 hover:translate-x-0.5 cursor-pointer"
+        aria-expanded={isExpanded}
       >
-        <div className="flex items-baseline gap-4 flex-1 min-w-0">
-          <span className="text-sm font-light w-16 sm:w-32 shrink-0">{year}</span>
-          <span className="text-sm font-light truncate">{title}</span>
-        </div>
-        {isOpen ? (
-          <ChevronUp className="h-6 w-6" strokeWidth={1} aria-hidden />
-        ) : (
-          <Plus className="h-6 w-6" strokeWidth={1} aria-hidden />
-        )}
+        {isExpanded ? "see less" : "see whole text"}
       </button>
-      {isOpen ? (
-        <div className="mt-6 text-[14px] pb-6 whitespace-pre-wrap">{body}</div>
-      ) : null}
     </div>
   )
 }

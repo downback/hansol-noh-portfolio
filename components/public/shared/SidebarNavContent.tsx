@@ -39,22 +39,24 @@ export default function SidebarNavContent({
             <Link
               key={link.href}
               className={cn(
-                "transition-colors hover:text-muted-foreground text-sm md:text-[14px] xl:text-[15px]",
-                pathname === link.href && "font-semibold hover:text-black",
+                "transition-colors hover:text-black/60 hover:translate-x-0.5 text-sm md:text-[14px] xl:text-[15px] font-normal",
+                pathname === link.href &&
+                  "font-bold hover:text-black hover:translate-x-0 hover:cursor-default",
               )}
               href={link.href}
               onClick={onNavigate}
             >
+              {pathname === link.href && "➤"}
               {link.label}
             </Link>
           ))}
       </div>
 
       <div className="">
-        <span className="text-sm md:text-[14px] xl:text-[15px] inline-block w-full font-semibold">
+        <span className="text-sm md:text-[14px] xl:text-[15px] inline-block w-full font-extrabold">
           WORKS
         </span>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-1">
           {sidebarWorkItems.length === 0 ? (
             <span className="text-sm text-muted-foreground py-1">
               No works yet
@@ -64,13 +66,15 @@ export default function SidebarNavContent({
               <Link
                 key={item.key}
                 className={cn(
-                  "block truncate transition-colors hover:text-muted-foreground text-sm md:text-[12px] font-light capitalize",
-                  pathname === item.href && "font-semibold hover:text-black",
+                  "block truncate transition-colors hover:text-black/60 hover:translate-x-0.5 text-sm md:text-[13px] font-normal capitalize",
+                  pathname === item.href &&
+                    "font-bold hover:text-black hover:translate-x-0 hover:cursor-default",
                 )}
                 href={item.href}
                 onClick={onNavigate}
                 title={item.title}
               >
+                {pathname === item.href && "➤"}
                 {item.title}
               </Link>
             ))

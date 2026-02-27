@@ -9,7 +9,12 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import SidebarNavContent from "@/components/public/shared/SidebarNavContent"
 
-type SidebarWorkItem = { slug: string; href: string; key: string; title: string }
+type SidebarWorkItem = {
+  slug: string
+  href: string
+  key: string
+  title: string
+}
 
 type NavLink = {
   href: string
@@ -104,7 +109,7 @@ export default function SidebarNavMobile({
           {/* Overlay Header */}
           <div className="flex flex-col gap-4 shrink-0 pl-6 pt-8 pb-4">
             <div className="flex items-start justify-between">
-              <div className="text-base font-semibold">HANSOL NOH</div>
+              <div className="text-base font-extrabold">HANSOL NOH</div>
               <Button
                 variant="default"
                 size="icon"
