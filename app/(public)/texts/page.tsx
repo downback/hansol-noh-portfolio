@@ -1,4 +1,3 @@
-import DetailSubHeader from "@/components/public/shared/DetailSubHeader"
 import TextList from "@/components/public/TextList"
 import { supabaseServer } from "@/lib/server"
 
@@ -23,8 +22,7 @@ export default async function Contact() {
     })) ?? []
 
   return (
-    <div className="space-y-4 px-6 mb-3 pt-8">
-      <DetailSubHeader segments={[{ label: "text" }]} />
+    <div className="space-y-4 px-6 mb-3 md:pt-8 pt-0">
       <div className="w-full flex justify-star items-start">
         <TextList items={items} />
       </div>

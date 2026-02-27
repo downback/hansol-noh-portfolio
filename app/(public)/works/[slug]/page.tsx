@@ -1,5 +1,4 @@
 import ArtworkList from "@/components/public/ArtworkList"
-import DetailSubHeader from "@/components/public/shared/DetailSubHeader"
 import { siteAssetsBucketName } from "@/lib/constants"
 import { supabaseServer } from "@/lib/server"
 
@@ -74,10 +73,7 @@ export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
     : []
 
   return (
-    <div className="space-y-4 px-6 mb-32 pt-8">
-      <DetailSubHeader
-        segments={[{ label: "work", value: formatSlug(slug) }]}
-      />
+    <div className="space-y-4 px-6 mb-32 md:pt-8 pt-0">
       <ArtworkList items={items} />
     </div>
   )

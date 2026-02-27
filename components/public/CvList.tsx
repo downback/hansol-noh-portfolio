@@ -22,7 +22,7 @@ export default function CvList({
 }: CvListProps) {
   return (
     <div className="w-full flex flex-col md:flex-row gap-2 md:gap-8">
-      <div className="text-sm font-medium md:font-light min-w-48 text-left md:text-right">
+      <div className="text-sm font-medium md:font-light min-w-36 text-left">
         {category}
       </div>
       <div className="flex flex-col">

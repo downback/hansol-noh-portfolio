@@ -1,5 +1,4 @@
 import ExhibitionList from "@/components/public/ExhibitionList"
-import DetailSubHeader from "@/components/public/shared/DetailSubHeader"
 import { siteAssetsBucketName } from "@/lib/constants"
 import { supabaseServer } from "@/lib/server"
 
@@ -78,10 +77,7 @@ export default async function ExhibitionPage({ params }: ExhibitionPageProps) {
     : []
 
   return (
-    <div className="space-y-4 px-6 mb-32 pt-8">
-      <DetailSubHeader
-        segments={[{ label: "exhibition", value: exhibitionTitle }]}
-      />
+    <div className="space-y-4 px-6 mb-32 md:pt-8 pt-0">
       <ExhibitionList items={items} />
     </div>
   )

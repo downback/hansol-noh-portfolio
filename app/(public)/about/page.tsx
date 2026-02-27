@@ -1,6 +1,4 @@
 import Link from "next/link"
-import { Instagram } from "lucide-react"
-import DetailSubHeader from "@/components/public/shared/DetailSubHeader"
 import { supabaseServer } from "@/lib/server"
 import CvList from "@/components/public/CvList"
 
@@ -79,8 +77,7 @@ export default async function Bio() {
   const awardsItems = mapItems(awardsRows ?? [])
   const collectionsItems = mapItems(collectionsRows ?? [])
   return (
-    <div className="font-light px-6 mb-32 pt-8 ">
-      <DetailSubHeader segments={[{ label: "cv" }]} />
+    <div className="font-light px-6 mb-32 md:pt-8 pt-0 ">
       <div className="flex md:flex-row flex-col w-full">
         <div className="md:flex-1">
           <div className="text-[14px] font-bold mb-2 mt-2 md:mt-0">
