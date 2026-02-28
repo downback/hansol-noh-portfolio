@@ -4,6 +4,8 @@ import SidebarNavDesktop from "@/components/public/shared/SidebarNavDesktop"
 import SidebarNavMobile from "@/components/public/shared/SidebarNavMobile"
 import { supabaseServer } from "@/lib/server"
 
+export const dynamic = "force-dynamic"
+
 const navLinks = [
   { href: "/works", label: "works" },
   { href: "/about", label: "About" },

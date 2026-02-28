@@ -2,6 +2,8 @@ import AdminMainImagePreviewPanel from "@/components/admin/main/AdminMainImagePr
 import { siteAssetsBucketName } from "@/lib/constants"
 import { supabaseServer } from "@/lib/server"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminMainPage() {
   const supabase = await supabaseServer()
   const bucketName = siteAssetsBucketName
