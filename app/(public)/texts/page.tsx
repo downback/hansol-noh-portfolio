@@ -22,7 +22,7 @@ export default async function Contact() {
     })) ?? []
 
   return (
-    <div className="space-y-4 px-6 mb-3 md:pt-8 pt-0">
+    <div className="space-y-4 px-6 mb-3 mt-0 md:mt-30">
       <div className="w-full flex justify-star items-start">
         <TextList items={items} />
       </div>

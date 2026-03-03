@@ -21,13 +21,10 @@ type ArtworkListProps = {
 
 export default function ArtworkList({ items = [] }: ArtworkListProps) {
   return (
-    <div className="w-full flex flex-col justify-center items-center gap-14">
+    <div className="w-full flex flex-col justify-center items-center">
       {items.map((item) => (
-        <div
-          key={item.id}
-          className="mx-auto w-full md:w-lg xl:max-w-3xl space-y-2"
-        >
-          <div className="w-full">
+        <div key={item.id} className="mx-auto w-full md:w-lg xl:w-2xl">
+          <div className="w-full mb-2">
             <LightboxImage
               src={item.mainImageSrc}
               alt={item.mainImageAlt ?? "Artwork"}
@@ -47,7 +44,7 @@ export default function ArtworkList({ items = [] }: ArtworkListProps) {
             {item.caption}
           </div>
 
-          <div className="flex flex-col gap-6 mt-12 md:mt-16">
+          <div className="flex flex-col gap-6 mt-6 md:mt-10 md:gap-10">
             {(item.detailImages ?? []).map((image) => (
               <div key={image.id} className="w-full">
                 <LightboxImage

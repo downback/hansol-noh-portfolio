@@ -77,7 +77,7 @@ export default async function ExhibitionPage({ params }: ExhibitionPageProps) {
     : []
 
   return (
-    <div className="space-y-4 px-6 mb-32 md:pt-8 pt-0">
+    <div className="space-y-4 px-6 mb-32 mt-0 md:mt-30">
       <ExhibitionList items={items} />
     </div>
   )

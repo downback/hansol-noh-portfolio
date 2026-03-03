@@ -122,7 +122,7 @@ export default async function PublicLayout({
         />
       </div>
       <main className="flex-auto md:w-auto">
-        <div className="md:mt-22 mt-0">{children}</div>
+        <div className="">{children}</div>
       </main>
     </div>
   )

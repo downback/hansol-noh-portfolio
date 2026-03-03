@@ -22,13 +22,10 @@ export default function ExhibitionList({
   items?: Exhibition[]
 }) {
   return (
-    <div className="w-full flex flex-col justify-center items-center gap-14 text-center">
+    <div className="w-full flex flex-col justify-center items-center text-center">
       {items.map((item) => (
-        <div
-          key={item.id}
-          className="mx-auto w-full md:w-lg xl:w-2xl space-y-4"
-        >
-          <div className="w-full">
+        <div key={item.id} className="mx-auto w-full md:w-lg xl:w-2xl">
+          <div className="w-full mb-2">
             <LightboxImage
               src={item.mainImageSrc}
               alt={item.mainImageAlt ?? "Exhibition main image"}
@@ -48,7 +45,7 @@ export default function ExhibitionList({
             {item.description}
           </div>
 
-          <div className="flex flex-col gap-8 mt-12 md:mt-16">
+          <div className="flex flex-col gap-6 mt-6 md:mt-10 md:gap-10">
             {(item.detailImages ?? []).map((image) => (
               <div key={image.id} className=" w-full">
                 <LightboxImage
