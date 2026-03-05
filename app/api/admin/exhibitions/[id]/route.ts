@@ -7,7 +7,6 @@ import {
 import { buildStoragePathWithPrefix } from "@/lib/storage"
 import { insertActivityLog, requireAdminUser } from "@/lib/server/adminRoute"
 import { deleteUnifiedWorkOrder } from "@/lib/server/unifiedWorkOrder"
-import { toSlug } from "@/lib/utils"
 import {
   insertAdditionalExhibitionImages,
   removeAdditionalExhibitionImages,
@@ -27,7 +26,6 @@ type RouteContext = {
   params: Promise<{ id: string }>
 }
 
-
 export async function PATCH(request: Request, { params }: RouteContext) {
   try {
     const { id } = await params
@@ -45,7 +43,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const file = formData.get("file")
     const category = formData.get("category")?.toString().trim()
     const exhibitionTitle = formData.get("exhibition_title")?.toString().trim()
-    const caption = formData.get("caption")?.toString().trim()
+    const exhibitionCaption = formData.get("exhibition_caption")?.toString().trim()
     const description = formData.get("description")?.toString().trim()
     const additionalFiles = formData
       .getAll("additional_images")
@@ -65,13 +63,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (!exhibitionTitle) {
       return NextResponse.json(
         { error: "Exhibition title is required." },
-        { status: 400 },
-      )
-    }
-
-    if (!caption) {
-      return NextResponse.json(
-        { error: "Caption is required." },
         { status: 400 },
       )
     }
@@ -113,7 +104,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     const { data: exhibition, error: exhibitionError } = await supabase
       .from("exhibitions")
-      .select("id, type, title, slug, description")
+      .select("id, type, title, slug, caption, description")
       .eq("id", imageRow.exhibition_id)
       .maybeSingle()
 
@@ -125,20 +116,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     const exhibitionType = category === "solo-exhibitions" ? "solo" : "group"
-    const slug = toSlug(exhibitionTitle)
-    if (!slug) {
-      return NextResponse.json(
-        { error: "Exhibition title is required." },
-        { status: 400 },
-      )
-    }
+    const slug = exhibition.slug
 
     const { error: exhibitionUpdateError } = await supabase
       .from("exhibitions")
       .update({
         type: exhibitionType,
         title: exhibitionTitle,
-        slug,
+        caption: exhibitionCaption || null,
         description: description || null,
       })
       .eq("id", exhibition.id)
@@ -183,7 +168,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .from("exhibition_images")
       .update({
         storage_path: nextStoragePath,
-        caption,
+        caption: exhibitionTitle,
       })
       .eq("id", id)
       .select("id, created_at, storage_path")
@@ -237,7 +222,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
           supabase,
           bucketName,
           exhibitionId: imageRow.exhibition_id,
-          caption,
+          caption: exhibitionTitle,
           category,
           slug,
           additionalFiles,

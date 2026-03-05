@@ -47,7 +47,7 @@ export const useExhibitionsPanelData = () => {
       const { data, error } = await supabase
         .from("exhibition_images")
         .select(
-          "id, storage_path, caption, display_order, created_at, is_primary, exhibitions ( id, title, type, slug, description )",
+          "id, storage_path, caption, display_order, created_at, is_primary, exhibitions ( id, title, slug, type, description, caption )",
         )
 
       if (error) {
@@ -78,6 +78,8 @@ export const useExhibitionsPanelData = () => {
                 : "group-exhibitions",
             description: exhibition.description ?? "",
             exhibitionTitle: exhibition.title ?? "",
+            exhibitionSlug: exhibition.slug ?? "",
+            exhibitionCaption: exhibition.caption ?? "",
             exhibitionOrder: orderMap.get(exhibition.id) ?? 999999,
             imageOrder: item.display_order ?? 0,
             createdAt: item.created_at ?? new Date().toISOString(),
@@ -86,7 +88,8 @@ export const useExhibitionsPanelData = () => {
         .filter((item): item is ExhibitionPreviewItem => Boolean(item))
         .sort(
           (a, b) =>
-            a.exhibitionOrder - b.exhibitionOrder || a.imageOrder - b.imageOrder,
+            a.exhibitionOrder - b.exhibitionOrder ||
+            a.imageOrder - b.imageOrder,
         )
 
       setPreviewItems(nextItems)
@@ -115,7 +118,8 @@ export const useExhibitionsPanelData = () => {
         mainImageUrl: editingItem.imageUrl,
         category: editingItem.category,
         exhibitionTitle: editingItem.exhibitionTitle,
-        caption: editingItem.caption,
+        exhibitionSlug: editingItem.exhibitionSlug,
+        exhibitionCaption: editingItem.exhibitionCaption,
         description: editingItem.description,
         additionalImages: editingAdditionalImages,
       }
@@ -137,8 +141,8 @@ export const useExhibitionsPanelData = () => {
         setErrorMessage("Exhibition title is required.")
         return
       }
-      if (!values.caption.trim()) {
-        setErrorMessage("Caption is required.")
+      if (!isEditMode && !values.exhibitionSlug.trim()) {
+        setErrorMessage("Exhibition slug is required.")
         return
       }
 
@@ -160,7 +164,8 @@ export const useExhibitionsPanelData = () => {
         }
         formData.append("category", values.category)
         formData.append("exhibition_title", values.exhibitionTitle)
-        formData.append("caption", values.caption)
+        formData.append("exhibition_slug", values.exhibitionSlug)
+        formData.append("exhibition_caption", values.exhibitionCaption)
         formData.append("description", values.description)
         values.additionalImages.forEach((file) => {
           formData.append("additional_images", file)
@@ -215,10 +220,12 @@ export const useExhibitionsPanelData = () => {
               id: crypto.randomUUID(),
               exhibitionId: editingItem?.exhibitionId ?? crypto.randomUUID(),
               imageUrl: previewUrl,
-              caption: values.caption,
+              caption: values.exhibitionTitle,
               category: values.category,
               description: values.description,
               exhibitionTitle: values.exhibitionTitle,
+              exhibitionSlug: values.exhibitionSlug,
+              exhibitionCaption: values.exhibitionCaption,
               exhibitionOrder: 0,
               imageOrder: 0,
               createdAt: new Date().toISOString(),

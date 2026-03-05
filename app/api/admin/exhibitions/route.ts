@@ -14,7 +14,6 @@ import { validateImageUploadFile } from "@/lib/uploadValidation"
 
 const bucketName = siteAssetsBucketName
 
-
 export async function POST(request: Request) {
   try {
     const supabase = await supabaseServer()
@@ -27,7 +26,8 @@ export async function POST(request: Request) {
     const file = formData.get("file")
     const category = formData.get("category")?.toString().trim()
     const exhibitionTitle = formData.get("exhibition_title")?.toString().trim()
-    const caption = formData.get("caption")?.toString().trim()
+    const exhibitionSlug = formData.get("exhibition_slug")?.toString().trim()
+    const exhibitionCaption = formData.get("exhibition_caption")?.toString().trim()
     const description = formData.get("description")?.toString().trim()
     const additionalFiles = formData
       .getAll("additional_images")
@@ -77,17 +77,17 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!caption) {
+    if (!exhibitionSlug) {
       return NextResponse.json(
-        { error: "Caption is required." },
+        { error: "Exhibition slug is required." },
         { status: 400 },
       )
     }
 
-    const slug = toSlug(exhibitionTitle)
+    const slug = toSlug(exhibitionSlug)
     if (!slug) {
       return NextResponse.json(
-        { error: "Exhibition title is required." },
+        { error: "Exhibition slug is invalid." },
         { status: 400 },
       )
     }
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       category,
       slug,
       exhibitionTitle,
-      caption,
+      exhibitionCaption,
       description,
       mainFile: file,
       additionalFiles,

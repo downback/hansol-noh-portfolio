@@ -28,7 +28,8 @@ export type ExhibitionFormValues = {
   mainImageFile: File | null
   category: ExhibitionCategory
   exhibitionTitle: string
-  caption: string
+  exhibitionSlug: string
+  exhibitionCaption: string
   description: string
   additionalImages: File[]
   removedAdditionalImageIds?: string[]
@@ -44,7 +45,8 @@ type ExhibitionUploadModalProps = {
     mainImageUrl?: string
     category?: ExhibitionCategory
     exhibitionTitle?: string
-    caption?: string
+    exhibitionSlug?: string
+    exhibitionCaption?: string
     description?: string
     additionalImages?: { id: string; url: string }[]
   }
@@ -75,7 +77,8 @@ export default function ExhibitionUploadModal({
     exhibitionCategories[0],
   )
   const [exhibitionTitle, setExhibitionTitle] = useState("")
-  const [caption, setCaption] = useState("")
+  const [exhibitionSlug, setExhibitionSlug] = useState("")
+  const [exhibitionCaption, setExhibitionCaption] = useState("")
   const [details, setDetails] = useState("")
   const [additionalImages, setAdditionalImages] = useState<File[]>([])
   const [existingAdditionalImages, setExistingAdditionalImages] = useState<
@@ -109,7 +112,8 @@ export default function ExhibitionUploadModal({
     setMainImageFile(null)
     setCategory(initialValues?.category ?? exhibitionCategories[0])
     setExhibitionTitle(initialValues?.exhibitionTitle ?? "")
-    setCaption(initialValues?.caption ?? "")
+    setExhibitionSlug(initialValues?.exhibitionSlug ?? "")
+    setExhibitionCaption(initialValues?.exhibitionCaption ?? "")
     setDetails(initialValues?.description ?? "")
     setInitialMainImageUrl(initialValues?.mainImageUrl ?? "")
     setExistingAdditionalImages(initialValues?.additionalImages ?? [])
@@ -170,7 +174,8 @@ export default function ExhibitionUploadModal({
       setInitialMainImageUrl("")
       setCategory(exhibitionCategories[0])
       setExhibitionTitle("")
-      setCaption("")
+      setExhibitionSlug("")
+      setExhibitionCaption("")
       setDetails("")
       setAdditionalImages([])
       setExistingAdditionalImages([])
@@ -192,12 +197,13 @@ export default function ExhibitionUploadModal({
       .replace(/^-|-$/g, "")
   }
 
-  const derivedExhibitionSlug = slugify(exhibitionTitle)
+  const derivedExhibitionSlug = slugify(exhibitionSlug)
+
   const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-  const validateExhibitionTitle = (): string | null => {
+  const validateExhibitionSlug = (): string | null => {
     const trimmed = derivedExhibitionSlug.trim()
     if (!trimmed) {
-      return "전시 타이틀을 입력해주세요."
+      return "영문 URL 슬러그를 입력해주세요."
     }
     if (!slugPattern.test(trimmed)) {
       return "영문 소문자, 숫자, 하이픈만 사용할 수 있습니다. (e.g. exhibition1, exhibition2025-1)"
@@ -206,13 +212,13 @@ export default function ExhibitionUploadModal({
   }
 
   const initialExhibitionTitle = initialValues?.exhibitionTitle ?? ""
-  const initialCaption = initialValues?.caption ?? ""
+  const initialExhibitionCaption = initialValues?.exhibitionCaption ?? ""
   const initialDescription = initialValues?.description ?? ""
 
   const hasChanges =
     mainImageFile !== null ||
     exhibitionTitle !== initialExhibitionTitle ||
-    caption !== initialCaption ||
+    exhibitionCaption !== initialExhibitionCaption ||
     details !== initialDescription ||
     additionalImages.length > 0 ||
     removedAdditionalImageIds.length > 0
@@ -232,7 +238,7 @@ export default function ExhibitionUploadModal({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="upload-main-image">
-                Main image upload{isEditMode ? " (optional)" : ""}
+                전시 메인 이미지{isEditMode ? " (optional)" : ""}
               </Label>
               <label
                 htmlFor="upload-main-image"
@@ -270,15 +276,15 @@ export default function ExhibitionUploadModal({
               ) : null}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="exhibition-title">전시 타이틀 *</Label>
+              <Label htmlFor="exhibition-slug">작품 영문 타이틀(URL) *</Label>
               <Input
-                id="exhibition-title"
-                value={exhibitionTitle}
+                id="exhibition-slug"
+                value={exhibitionSlug}
                 onChange={(event) => {
-                  setExhibitionTitle(event.target.value)
+                  setExhibitionSlug(event.target.value)
                   setExhibitionTitleError("")
                 }}
-                placeholder="메뉴바에 들어갈 전시 타이틀을 영문으로 입력해주세요"
+                placeholder="메뉴바 URL에 사용할 영문 슬러그를 입력해주세요"
                 disabled={isEditMode}
               />
               {exhibitionTitleError ? (
@@ -300,14 +306,26 @@ export default function ExhibitionUploadModal({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="exhibition-caption">
-                전시 한글 타이틀 혹은 세부 정보 *
-              </Label>
+              <Label htmlFor="exhibition-title">전시 타이틀 *</Label>
+              <Textarea
+                id="exhibition-title"
+                value={exhibitionTitle}
+                onChange={(event) => setExhibitionTitle(event.target.value)}
+                placeholder="전시 메인 이미지 하단에 들어갈 전시 타이틀을 입력해주세요"
+                className="min-h-[60px]"
+              />
+              <div className="text-xs text-muted-foreground">
+                *전시 세부페이지에 들어갈 타이틀을 입력해주세요. 영문, 국문,
+                특수문자 모두 포함 가능합니다.
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exhibition-caption">전시 세부정보</Label>
               <Textarea
                 id="exhibition-caption"
-                value={caption}
-                onChange={(event) => setCaption(event.target.value)}
-                placeholder="전시 메인 이미지 하단에 들어갈 전시 설명 텍스트를 입력해주세요"
+                value={exhibitionCaption}
+                onChange={(event) => setExhibitionCaption(event.target.value)}
+                placeholder="전시 세부정보를 입력해주세요 (선택사항 | ex. 전시기간, 전시장소 등)"
                 className="min-h-[60px]"
               />
             </div>
@@ -317,14 +335,12 @@ export default function ExhibitionUploadModal({
                 id="exhibition-description"
                 value={details}
                 onChange={(event) => setDetails(event.target.value)}
-                placeholder="전시 상세설명을 입력해주세요(선택사항)"
+                placeholder="전시 텍스트를 입력해주세요 (선택사항)"
                 className="min-h-[120px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="upload-additional-images">
-                Additional images
-              </Label>
+              <Label htmlFor="upload-additional-images">전시 추가 이미지</Label>
               <Input
                 id="upload-additional-images"
                 type="file"
@@ -399,9 +415,9 @@ export default function ExhibitionUploadModal({
               variant="highlight"
               onClick={() => {
                 if (!isEditMode) {
-                  const titleValidationError = validateExhibitionTitle()
-                  if (titleValidationError) {
-                    setExhibitionTitleError(titleValidationError)
+                  const slugValidationError = validateExhibitionSlug()
+                  if (slugValidationError) {
+                    setExhibitionTitleError(slugValidationError)
                     return
                   }
                 }
@@ -410,7 +426,8 @@ export default function ExhibitionUploadModal({
                   mainImageFile,
                   category,
                   exhibitionTitle,
-                  caption,
+                  exhibitionSlug: derivedExhibitionSlug,
+                  exhibitionCaption,
                   description: details,
                   additionalImages,
                   removedAdditionalImageIds,

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react"
 import { GripVertical } from "lucide-react"
 import type { UnifiedOrderItemWithMeta } from "@/app/api/admin/unified-order/route"
 
-const formatSlugForDisplay = (slug: string) => slug.replace(/-/g, " ")
 
 export default function UnifiedOrderPanel() {
   const [items, setItems] = useState<UnifiedOrderItemWithMeta[]>([])
@@ -118,10 +117,8 @@ export default function UnifiedOrderPanel() {
                 <span className="inline-block min-w-20 shrink-0 text-xs text-muted-foreground uppercase mr-2">
                   {item.entityType}
                 </span>
-                <span className="inline-block min-w-0 truncate text-sm capitalize">
-                  {item.slug
-                    ? formatSlugForDisplay(item.slug)
-                    : (item.title ?? "Untitled")}
+                <span className="inline-block min-w-0 truncate text-sm">
+                  {item.title ?? "Untitled"}
                 </span>
               </div>
             </div>

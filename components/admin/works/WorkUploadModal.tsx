@@ -286,7 +286,7 @@ export default function WorkUploadModal({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="upload-image">
-                Image upload{isEditMode ? " (optional)" : ""}
+                작품 메인 이미지{isEditMode ? " (optional)" : ""}
               </Label>
               <label
                 htmlFor="upload-image"
@@ -325,7 +325,7 @@ export default function WorkUploadModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="work-year">
-                Year{isYearSelectDisabled ? "" : " *"}
+                작품 제작 연도{isYearSelectDisabled ? "" : " *"}
               </Label>
               {isYearSelectDisabled ? (
                 <div
@@ -351,7 +351,7 @@ export default function WorkUploadModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="work-slug-title">
-                English Title{isEditMode ? "" : " *"}
+                작품 영문 타이틀(URL){isEditMode ? "" : " *"}
               </Label>
               <Input
                 id="work-slug-title"
@@ -382,7 +382,7 @@ export default function WorkUploadModal({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="work-title">Title *</Label>
+              <Label htmlFor="work-title">작품 타이틀 *</Label>
               <Textarea
                 id="work-title"
                 value={titleValue}
@@ -391,12 +391,12 @@ export default function WorkUploadModal({
                 className="min-h-[60px]"
               />
               <div className="text-xs text-muted-foreground">
-                *작업 세부페이지에 들어가는 타이틀을 입력해주세요. 영문, 국문
-                특수문자 포함 가능합니다.
+                *작업 세부페이지에 들어갈 타이틀을 입력해주세요. 영문, 국문,
+                특수문자 모두 포함 가능합니다.
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="work-caption">Caption *</Label>
+              <Label htmlFor="work-caption">작품 캡션 *</Label>
               <Textarea
                 id="work-caption"
                 value={caption}
@@ -406,9 +406,7 @@ export default function WorkUploadModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="upload-additional-images">
-                Additional images
-              </Label>
+              <Label htmlFor="upload-additional-images">작품 추가 이미지</Label>
               <Input
                 id="upload-additional-images"
                 type="file"

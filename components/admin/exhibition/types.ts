@@ -5,6 +5,8 @@ export type ExhibitionPreviewItem = {
   exhibitionId: string
   imageUrl: string
   exhibitionTitle: string
+  exhibitionSlug: string
+  exhibitionCaption: string
   caption: string
   category: ExhibitionCategory
   description: string

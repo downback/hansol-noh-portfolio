@@ -51,7 +51,7 @@ export default function ExhibitionCardByCategory({
                   <ImageCaptionPreview
                     imageUrl={item.imageUrl}
                     title={item.exhibitionTitle}
-                    caption={item.caption}
+                    caption={item.exhibitionSlug}
                     onEdit={() => {
                       onEdit(item)
                     }}

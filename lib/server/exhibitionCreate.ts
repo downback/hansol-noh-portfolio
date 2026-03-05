@@ -20,7 +20,7 @@ type ExecuteExhibitionCreateFlowInput = {
   category: ExhibitionCategory
   slug: string
   exhibitionTitle: string
-  caption: string
+  exhibitionCaption?: string
   description?: string
   mainFile: File
   additionalFiles: File[]
@@ -36,7 +36,7 @@ export const executeExhibitionCreateFlow = async ({
   category,
   slug,
   exhibitionTitle,
-  caption,
+  exhibitionCaption,
   description,
   mainFile,
   additionalFiles,
@@ -72,7 +72,9 @@ export const executeExhibitionCreateFlow = async ({
         status: 500,
         error: mapSupabaseErrorMessage({
           message:
-            orderError instanceof Error ? orderError.message : "Order lookup failed",
+            orderError instanceof Error
+              ? orderError.message
+              : "Order lookup failed",
           tableHint: "unified_work_order",
           fallbackMessage: "Unable to save exhibition entry.",
         }),
@@ -85,6 +87,7 @@ export const executeExhibitionCreateFlow = async ({
         type: exhibitionType,
         title: exhibitionTitle,
         slug,
+        caption: exhibitionCaption || null,
         description: description || null,
       })
       .select("id")
@@ -131,6 +134,7 @@ export const executeExhibitionCreateFlow = async ({
       .update({
         type: exhibitionType,
         title: exhibitionTitle,
+        caption: exhibitionCaption || null,
         description: description || null,
       })
       .eq("id", exhibitionId)
@@ -214,7 +218,7 @@ export const executeExhibitionCreateFlow = async ({
     .insert({
       exhibition_id: exhibitionId,
       storage_path: storagePath,
-      caption,
+      caption: exhibitionTitle,
       display_order: baseDisplayOrder,
       is_primary: true,
     })
@@ -249,15 +253,16 @@ export const executeExhibitionCreateFlow = async ({
       displayOrder: baseDisplayOrder + index + 1,
     }))
 
-    const { error: additionalUploadError } = await uploadStorageFilesWithRollback({
-      supabase,
-      bucketName,
-      items: additionalUploadItems.map((item) => ({
-        storagePath: item.storagePath,
-        file: item.file,
-      })),
-      logContext: "Exhibition create additional images rollback",
-    })
+    const { error: additionalUploadError } =
+      await uploadStorageFilesWithRollback({
+        supabase,
+        bucketName,
+        items: additionalUploadItems.map((item) => ({
+          storagePath: item.storagePath,
+          file: item.file,
+        })),
+        logContext: "Exhibition create additional images rollback",
+      })
 
     if (additionalUploadError) {
       console.error("Exhibition additional upload failed", {
@@ -266,14 +271,15 @@ export const executeExhibitionCreateFlow = async ({
       return {
         ok: false,
         status: 500,
-        error: additionalUploadError.message || "Upload failed. Please try again.",
+        error:
+          additionalUploadError.message || "Upload failed. Please try again.",
       }
     }
 
     const inserts = additionalUploadItems.map((item) => ({
       exhibition_id: exhibitionId,
       storage_path: item.storagePath,
-      caption,
+      caption: exhibitionTitle,
       display_order: item.displayOrder,
       is_primary: false,
     }))

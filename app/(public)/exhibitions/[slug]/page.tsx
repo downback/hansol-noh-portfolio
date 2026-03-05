@@ -14,7 +14,7 @@ export default async function ExhibitionPage({ params }: ExhibitionPageProps) {
   const supabase = await supabaseServer()
   const { data: exhibition, error: exhibitionError } = await supabase
     .from("exhibitions")
-    .select("id, title, slug, description")
+    .select("id, title, slug, description, caption")
     .eq("slug", slug)
     .maybeSingle()
 
@@ -57,13 +57,14 @@ export default async function ExhibitionPage({ params }: ExhibitionPageProps) {
   const fallbackTitle = formatSlug(slug)
   const exhibitionTitle = exhibition?.title ?? fallbackTitle
   const exhibitionDescription = exhibition?.description ?? ""
+  const exhibitionCaption = exhibition?.caption ?? ""
 
   const items = mainImage
     ? [
         {
           id: `exhibition-${slug}`,
           title: exhibitionTitle,
-          caption: mainImage.alt,
+          caption: exhibitionCaption,
           description: exhibitionDescription,
           mainImageSrc: mainImage.src,
           mainImageAlt: mainImage.alt,

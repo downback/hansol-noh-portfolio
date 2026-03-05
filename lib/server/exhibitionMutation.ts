@@ -10,6 +10,7 @@ type ExhibitionSnapshot = {
   type: string
   title: string
   slug: string
+  caption: string | null
   description: string | null
 }
 
@@ -23,6 +24,7 @@ export const rollbackExhibitionUpdate = async (
       type: exhibition.type,
       title: exhibition.title,
       slug: exhibition.slug,
+      caption: exhibition.caption ?? null,
       description: exhibition.description ?? null,
     })
     .eq("id", exhibition.id)
