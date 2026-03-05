@@ -73,8 +73,11 @@ export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
     : []
 
   return (
-    <div className="space-y-4 px-6 mb-32 mt-0 md:mt-30">
+    <div className="space-y-4 px-6 mt-0 md:mt-30">
       <ArtworkList items={items} />
+      <footer className="text-right text-[11px] md:text-xs text-black/20 mt-42 md:mt-30 mb-6">
+        <p>© {new Date().getFullYear()} Hansol Noh. All rights reserved.</p>
+      </footer>
     </div>
   )
 }

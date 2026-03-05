@@ -40,7 +40,7 @@ export default function ArtworkList({ items = [] }: ArtworkListProps) {
             {item.title}
           </div>
 
-          <div className="text-left px-1 text-sm md:text-[14px] font-light whitespace-pre-wrap">
+          <div className="text-left px-1 text-xs md:text-[14px] font-light whitespace-pre-wrap">
             {item.caption}
           </div>
 
