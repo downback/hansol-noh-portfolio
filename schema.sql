@@ -471,6 +471,11 @@ for each row execute function public.set_updated_at();
 -- Add caption column if hero_image already exists without it
 alter table public.hero_image add column if not exists caption text;
 
+-- Allow optional captions on artwork detail images.
+-- Main artwork captions are still enforced by the application layer.
+alter table public.artwork_images
+alter column caption drop not null;
+
 -- ============================================================
 -- Unified Work Order (works + exhibitions in one list)
 -- Run AFTER clearing artworks and exhibitions content

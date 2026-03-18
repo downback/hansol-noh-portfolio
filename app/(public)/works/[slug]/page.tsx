@@ -45,6 +45,7 @@ export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
           id: row.id,
           src: publicData.publicUrl,
           alt: row.caption ?? "Work image",
+          caption: row.caption ?? "",
           isPrimary: row.is_primary ?? false,
         }
       })
@@ -67,6 +68,7 @@ export default async function WorkBySlugPage({ params }: WorkBySlugPageProps) {
             id: image.id,
             src: image.src,
             alt: image.alt,
+            caption: image.caption,
           })),
         },
       ]

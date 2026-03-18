@@ -12,6 +12,7 @@ type Artwork = {
     id: string
     src: string
     alt: string
+    caption?: string
   }[]
 }
 
@@ -56,6 +57,11 @@ export default function ArtworkList({ items = [] }: ArtworkListProps) {
                   className="block h-full w-full"
                   imageClassName="h-auto w-full object-cover md:h-auto md:w-full"
                 />
+                {image.caption?.trim() ? (
+                  <div className="text-left px-1 pt-2 text-xs md:text-[14px] font-light whitespace-pre-wrap">
+                    {image.caption}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

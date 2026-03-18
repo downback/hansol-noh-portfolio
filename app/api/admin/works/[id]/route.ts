@@ -14,12 +14,59 @@ import { deleteUnifiedWorkOrder } from "@/lib/server/unifiedWorkOrder"
 import {
   insertAdditionalWorkImages,
   removeAdditionalWorkImages,
+  updateAdditionalWorkImageCaptions,
 } from "@/lib/server/workMutation"
 import { supabaseServer } from "@/lib/server"
 import { validateImageUploadFile } from "@/lib/uploadValidation"
 import { isUuid } from "@/lib/validation"
 
 const bucketName = siteAssetsBucketName
+
+const parseCaptionList = (value: FormDataEntryValue | null, expected: number) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return Array.from({ length: expected }, () => "")
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!Array.isArray(parsed)) {
+      return null
+    }
+    return Array.from({ length: expected }, (_, index) =>
+      typeof parsed[index] === "string" ? parsed[index] : "",
+    )
+  } catch {
+    return null
+  }
+}
+
+const parseExistingCaptionUpdates = (value: FormDataEntryValue | null) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!Array.isArray(parsed)) {
+      return null
+    }
+    return parsed.flatMap((item) => {
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        "id" in item &&
+        "caption" in item &&
+        typeof item.id === "string" &&
+        typeof item.caption === "string"
+      ) {
+        return [{ id: item.id, caption: item.caption }]
+      }
+      return []
+    })
+  } catch {
+    return null
+  }
+}
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -46,10 +93,31 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const additionalFiles = formData
       .getAll("additional_images")
       .filter((value): value is File => value instanceof File)
+    const additionalCaptions = parseCaptionList(
+      formData.get("additional_image_captions"),
+      additionalFiles.length,
+    )
+    const existingCaptionUpdates = parseExistingCaptionUpdates(
+      formData.get("existing_additional_image_captions"),
+    )
     const removedAdditionalImageIds = formData
       .getAll("removedAdditionalImageIds")
       .map((value) => value.toString().trim())
       .filter((value) => value.length > 0)
+
+    if (!additionalCaptions) {
+      return NextResponse.json(
+        { error: "Invalid additional image captions." },
+        { status: 400 },
+      )
+    }
+
+    if (!existingCaptionUpdates) {
+      return NextResponse.json(
+        { error: "Invalid existing additional image captions." },
+        { status: 400 },
+      )
+    }
 
     const metadataValidationResult = validateWorkMetadata({
       yearRaw: yearRaw ?? "",
@@ -96,6 +164,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (removedAdditionalImageIds.some((imageId) => !isUuid(imageId))) {
       return NextResponse.json(
         { error: "Invalid additional image id." },
+        { status: 400 },
+      )
+    }
+
+    if (existingCaptionUpdates.some((image) => !isUuid(image.id))) {
+      return NextResponse.json(
+        { error: "Invalid existing additional image id." },
         { status: 400 },
       )
     }
@@ -226,7 +301,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         bucketName,
         artworkId: id,
         slug: artworkSlug,
-        caption: normalizedCaption,
+        captions: additionalCaptions,
         additionalFiles,
         startDisplayOrder: baseDisplayOrder,
       })
@@ -234,6 +309,23 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         return NextResponse.json(
           { error: additionalResult.errorMessage },
           { status: 500 },
+        )
+      }
+    }
+
+    const filteredCaptionUpdates = existingCaptionUpdates.filter(
+      (item) => !removedAdditionalImageIds.includes(item.id),
+    )
+    if (filteredCaptionUpdates.length > 0) {
+      const captionUpdateResult = await updateAdditionalWorkImageCaptions({
+        supabase,
+        artworkId: id,
+        captionUpdates: filteredCaptionUpdates,
+      })
+      if (captionUpdateResult.errorMessage) {
+        return NextResponse.json(
+          { error: captionUpdateResult.errorMessage },
+          { status: captionUpdateResult.status },
         )
       }
     }

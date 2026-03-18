@@ -30,7 +30,7 @@ export const useWorksPanelData = () => {
   const [previewItems, setPreviewItems] = useState<WorkPreviewItem[]>([])
   const [editingItem, setEditingItem] = useState<WorkPreviewItem | null>(null)
   const [editingAdditionalImages, setEditingAdditionalImages] = useState<
-    { id: string; url: string }[]
+    { id: string; url: string; caption: string }[]
   >([])
   const [manualYears, setManualYears] = useState<string[]>([])
   const [selectedYear, setSelectedYear] = useState<string>("")
@@ -189,9 +189,22 @@ export const useWorksPanelData = () => {
         }
         formData.append("title", values.title)
         formData.append("caption", values.caption)
-        values.additionalImages.forEach((file) => {
-          formData.append("additional_images", file)
+        values.additionalImages.forEach((item) => {
+          formData.append("additional_images", item.file)
         })
+        formData.append(
+          "additional_image_captions",
+          JSON.stringify(values.additionalImages.map((item) => item.caption)),
+        )
+        formData.append(
+          "existing_additional_image_captions",
+          JSON.stringify(
+            values.existingAdditionalImages.map((item) => ({
+              id: item.id,
+              caption: item.caption,
+            })),
+          ),
+        )
         values.removedAdditionalImageIds?.forEach((imageId) => {
           formData.append("removedAdditionalImageIds", imageId)
         })
@@ -392,7 +405,7 @@ export const useWorksPanelData = () => {
 
       const { data, error } = await supabase
         .from("artwork_images")
-        .select("id, storage_path, is_primary, display_order")
+        .select("id, storage_path, caption, is_primary, display_order")
         .eq("artwork_id", item.id)
         .eq("is_primary", false)
         .order("display_order", { ascending: true })
@@ -410,6 +423,7 @@ export const useWorksPanelData = () => {
             return {
               id: img.id,
               url: publicData?.publicUrl ?? "",
+              caption: img.caption ?? "",
             }
           })
           .filter((img) => img.url.length > 0)

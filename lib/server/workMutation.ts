@@ -10,7 +10,7 @@ type InsertAdditionalWorkImagesInput = {
   bucketName: string
   artworkId: string
   slug: string
-  caption: string
+  captions?: string[]
   additionalFiles: File[]
   startDisplayOrder: number
 }
@@ -24,7 +24,7 @@ export const insertAdditionalWorkImages = async ({
   bucketName,
   artworkId,
   slug,
-  caption,
+  captions = [],
   additionalFiles,
   startDisplayOrder,
 }: InsertAdditionalWorkImagesInput): Promise<InsertAdditionalWorkImagesResult> => {
@@ -59,10 +59,10 @@ export const insertAdditionalWorkImages = async ({
     }
   }
 
-  const inserts = additionalUploadItems.map((item) => ({
+  const inserts = additionalUploadItems.map((item, index) => ({
     artwork_id: artworkId,
     storage_path: item.storagePath,
-    caption,
+    caption: captions[index]?.trim() || null,
     display_order: item.displayOrder,
     is_primary: false,
   }))
@@ -89,6 +89,73 @@ type RemoveAdditionalWorkImagesInput = {
   bucketName: string
   artworkId: string
   removedAdditionalImageIds: string[]
+}
+
+type UpdateAdditionalWorkImageCaptionsInput = {
+  supabase: ServerSupabaseClient
+  artworkId: string
+  captionUpdates: { id: string; caption: string }[]
+}
+
+type UpdateAdditionalWorkImageCaptionsResult =
+  | { errorMessage: null; status: 200 }
+  | { errorMessage: string; status: 400 | 500 }
+
+export const updateAdditionalWorkImageCaptions = async ({
+  supabase,
+  artworkId,
+  captionUpdates,
+}: UpdateAdditionalWorkImageCaptionsInput): Promise<UpdateAdditionalWorkImageCaptionsResult> => {
+  if (captionUpdates.length === 0) {
+    return { errorMessage: null, status: 200 }
+  }
+
+  const imageIds = captionUpdates.map((item) => item.id)
+  const { data: rows, error } = await supabase
+    .from("artwork_images")
+    .select("id, is_primary")
+    .eq("artwork_id", artworkId)
+    .in("id", imageIds)
+
+  if (error) {
+    return {
+      errorMessage: error.message || "Unable to update additional image captions.",
+      status: 500,
+    }
+  }
+
+  if ((rows ?? []).some((row) => row.is_primary)) {
+    return {
+      errorMessage: "Primary image caption must be updated separately.",
+      status: 400,
+    }
+  }
+
+  if ((rows ?? []).length !== imageIds.length) {
+    return {
+      errorMessage: "Some additional images could not be found.",
+      status: 400,
+    }
+  }
+
+  for (const item of captionUpdates) {
+    const { error: updateError } = await supabase
+      .from("artwork_images")
+      .update({ caption: item.caption.trim() || null })
+      .eq("id", item.id)
+      .eq("artwork_id", artworkId)
+      .eq("is_primary", false)
+
+    if (updateError) {
+      return {
+        errorMessage:
+          updateError.message || "Unable to update additional image captions.",
+        status: 500,
+      }
+    }
+  }
+
+  return { errorMessage: null, status: 200 }
 }
 
 type RemoveAdditionalWorkImagesResult =

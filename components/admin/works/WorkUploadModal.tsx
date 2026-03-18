@@ -25,9 +25,20 @@ import AdminDialog from "@/components/admin/shared/AdminDialog"
 import SavingDotsLabel from "@/components/admin/shared/SavingDotsLabel"
 import { useSingleImageInput } from "@/components/admin/shared/hooks/useSingleImageInput"
 import { useModalOpenTransition } from "@/components/admin/shared/hooks/useModalOpenTransition"
-import ExhibitionAdditionalImagesPreview from "@/components/admin/exhibition/ExhibitionAdditionalImagesPreview"
+import WorkAdditionalImagesEditor from "@/components/admin/works/WorkAdditionalImagesEditor"
 import { useExhibitionImagePreviews } from "@/components/admin/exhibition/hooks/useExhibitionImagePreviews"
 import { formatFileSize } from "@/lib/fileUpload"
+
+type AdditionalWorkImage = {
+  file: File
+  caption: string
+}
+
+type ExistingAdditionalWorkImage = {
+  id: string
+  url: string
+  caption: string
+}
 
 export type WorkFormValues = {
   imageFile: File | null
@@ -35,7 +46,8 @@ export type WorkFormValues = {
   slug: string
   title: string
   caption: string
-  additionalImages: File[]
+  additionalImages: AdditionalWorkImage[]
+  existingAdditionalImages: ExistingAdditionalWorkImage[]
   removedAdditionalImageIds?: string[]
 }
 
@@ -54,7 +66,7 @@ type WorkUploadModalProps = {
     slug?: string
     title?: string
     caption?: string
-    additionalImages?: { id: string; url: string }[]
+    additionalImages?: ExistingAdditionalWorkImage[]
   }
   isEditMode?: boolean
   confirmLabel?: string
@@ -89,9 +101,11 @@ export default function WorkUploadModal({
   const [slugTitle, setSlugTitle] = useState(initialValues?.slug ?? "")
   const [titleValue, setTitleValue] = useState(initialValues?.title ?? "")
   const [caption, setCaption] = useState(initialValues?.caption ?? "")
-  const [additionalImages, setAdditionalImages] = useState<File[]>([])
+  const [additionalImages, setAdditionalImages] = useState<AdditionalWorkImage[]>(
+    [],
+  )
   const [existingAdditionalImages, setExistingAdditionalImages] = useState<
-    { id: string; url: string }[]
+    ExistingAdditionalWorkImage[]
   >([])
   const [removedAdditionalImageIds, setRemovedAdditionalImageIds] = useState<
     string[]
@@ -120,10 +134,32 @@ export default function WorkUploadModal({
     removeAdditionalPreviewAt(indexToRemove)
   }
 
+  const handleAdditionalImageCaptionChange = (
+    indexToUpdate: number,
+    nextCaption: string,
+  ) => {
+    setAdditionalImages((prev) =>
+      prev.map((item, index) =>
+        index === indexToUpdate ? { ...item, caption: nextCaption } : item,
+      ),
+    )
+  }
+
   const handleRemoveExistingAdditionalImage = (id: string) => {
     setExistingAdditionalImages((prev) => prev.filter((item) => item.id !== id))
     setRemovedAdditionalImageIds((prev) =>
       prev.includes(id) ? prev : [...prev, id],
+    )
+  }
+
+  const handleExistingAdditionalImageCaptionChange = (
+    id: string,
+    nextCaption: string,
+  ) => {
+    setExistingAdditionalImages((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, caption: nextCaption } : item,
+      ),
     )
   }
 
@@ -229,6 +265,7 @@ export default function WorkUploadModal({
       setAdditionalImages([])
       setExistingAdditionalImages([])
       setRemovedAdditionalImageIds([])
+      setSlugError("")
     }
 
     onOpenChange(nextOpen)
@@ -262,12 +299,19 @@ export default function WorkUploadModal({
   const initialYear = initialValues?.year ?? ""
   const initialTitle = initialValues?.title ?? ""
   const initialCaption = initialValues?.caption ?? ""
+  const initialAdditionalImagesSerialized = JSON.stringify(
+    initialValues?.additionalImages ?? [],
+  )
+  const existingAdditionalImagesSerialized = JSON.stringify(
+    existingAdditionalImages,
+  )
 
   const hasChanges =
     imageFile !== null ||
     year !== initialYear ||
     titleValue !== initialTitle ||
     caption !== initialCaption ||
+    existingAdditionalImagesSerialized !== initialAdditionalImagesSerialized ||
     additionalImages.length > 0 ||
     removedAdditionalImageIds.length > 0
 
@@ -435,8 +479,8 @@ export default function WorkUploadModal({
 
                   const existingKeys = new Set(
                     additionalImages.map(
-                      (file) =>
-                        `${file.name}-${file.size}-${file.lastModified}`,
+                      (item) =>
+                        `${item.file.name}-${item.file.size}-${item.file.lastModified}`,
                     ),
                   )
                   const newFiles = files.filter((file) => {
@@ -449,18 +493,29 @@ export default function WorkUploadModal({
                     event.target.value = ""
                     return
                   }
-                  setAdditionalImages((prev) => [...prev, ...newFiles])
+                  setAdditionalImages((prev) => [
+                    ...prev,
+                    ...newFiles.map((file) => ({ file, caption: "" })),
+                  ])
                   appendAdditionalPreviews(newFiles)
                   event.target.value = ""
                 }}
               />
-              <ExhibitionAdditionalImagesPreview
+              <WorkAdditionalImagesEditor
                 existingAdditionalImages={existingAdditionalImages}
-                additionalPreviewUrls={additionalPreviewUrls}
+                newAdditionalImages={additionalImages.map((item, index) => ({
+                  file: item.file,
+                  previewUrl: additionalPreviewUrls[index] ?? "",
+                  caption: item.caption,
+                }))}
                 onRemoveExistingAdditionalImage={
                   handleRemoveExistingAdditionalImage
                 }
-                onRemoveAdditionalPreviewImage={handleRemoveAdditionalImage}
+                onRemoveNewAdditionalImage={handleRemoveAdditionalImage}
+                onExistingCaptionChange={
+                  handleExistingAdditionalImageCaptionChange
+                }
+                onNewCaptionChange={handleAdditionalImageCaptionChange}
               />
             </div>
           </div>
@@ -495,6 +550,7 @@ export default function WorkUploadModal({
                   title: titleValue,
                   caption,
                   additionalImages,
+                  existingAdditionalImages,
                   removedAdditionalImageIds,
                 })
               }}

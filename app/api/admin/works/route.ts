@@ -24,6 +24,24 @@ import { validateImageUploadFile } from "@/lib/uploadValidation"
 
 const bucketName = siteAssetsBucketName
 
+const parseCaptionList = (value: FormDataEntryValue | null, expected: number) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return Array.from({ length: expected }, () => "")
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!Array.isArray(parsed)) {
+      return null
+    }
+    return Array.from({ length: expected }, (_, index) =>
+      typeof parsed[index] === "string" ? parsed[index] : "",
+    )
+  } catch {
+    return null
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await supabaseServer()
@@ -41,10 +59,21 @@ export async function POST(request: Request) {
     const additionalFiles = formData
       .getAll("additional_images")
       .filter((value): value is File => value instanceof File)
+    const additionalCaptions = parseCaptionList(
+      formData.get("additional_image_captions"),
+      additionalFiles.length,
+    )
 
     if (!(file instanceof File)) {
       return NextResponse.json(
         { error: "Missing image file." },
+        { status: 400 },
+      )
+    }
+
+    if (!additionalCaptions) {
+      return NextResponse.json(
+        { error: "Invalid additional image captions." },
         { status: 400 },
       )
     }
@@ -224,7 +253,7 @@ export async function POST(request: Request) {
         bucketName,
         artworkId: artwork.id,
         slug: normalizedSlug,
-        caption: normalizedCaption,
+        captions: additionalCaptions,
         additionalFiles,
         startDisplayOrder: 1,
       })
