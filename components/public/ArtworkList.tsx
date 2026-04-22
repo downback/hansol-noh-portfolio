@@ -25,6 +25,11 @@ export default function ArtworkList({ items = [] }: ArtworkListProps) {
     <div className="w-full flex flex-col justify-center items-center">
       {items.map((item) => (
         <div key={item.id} className="mx-auto w-full md:w-lg xl:w-2xl">
+
+          <div className="text-left px-1 text-sm md:text-[14px] font-bold whitespace-pre-wrap mb-2">
+            {item.title}
+          </div>
+
           <div className="w-full mb-2">
             <LightboxImage
               src={item.mainImageSrc}
@@ -35,10 +40,6 @@ export default function ArtworkList({ items = [] }: ArtworkListProps) {
               className="block h-full w-full"
               imageClassName="h-auto w-full object-cover md:h-auto md:w-full"
             />
-          </div>
-
-          <div className="text-left px-1 text-sm md:text-[14px] font-bold whitespace-pre-wrap">
-            {item.title}
           </div>
 
           <div className="text-left px-1 text-xs md:text-[14px] font-light whitespace-pre-wrap">
