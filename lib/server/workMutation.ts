@@ -13,6 +13,7 @@ type InsertAdditionalWorkImagesInput = {
   captions?: string[]
   additionalFiles: File[]
   startDisplayOrder: number
+  displayOrders?: number[]
 }
 
 type InsertAdditionalWorkImagesResult =
@@ -27,9 +28,14 @@ export const insertAdditionalWorkImages = async ({
   captions = [],
   additionalFiles,
   startDisplayOrder,
+  displayOrders,
 }: InsertAdditionalWorkImagesInput): Promise<InsertAdditionalWorkImagesResult> => {
   if (additionalFiles.length === 0) {
     return { errorMessage: null }
+  }
+
+  if (displayOrders && displayOrders.length !== additionalFiles.length) {
+    return { errorMessage: "Invalid additional image order." }
   }
 
   const prefix = `works/${slug}`
@@ -39,7 +45,7 @@ export const insertAdditionalWorkImages = async ({
       prefix,
       file: additional,
     }),
-    displayOrder: startDisplayOrder + index,
+    displayOrder: displayOrders?.[index] ?? startDisplayOrder + index,
   }))
 
   const { error: additionalUploadError } = await uploadStorageFilesWithRollback({
@@ -94,7 +100,7 @@ type RemoveAdditionalWorkImagesInput = {
 type UpdateAdditionalWorkImageCaptionsInput = {
   supabase: ServerSupabaseClient
   artworkId: string
-  captionUpdates: { id: string; caption: string }[]
+  imageUpdates: { id: string; caption: string; displayOrder: number }[]
 }
 
 type UpdateAdditionalWorkImageCaptionsResult =
@@ -104,13 +110,13 @@ type UpdateAdditionalWorkImageCaptionsResult =
 export const updateAdditionalWorkImageCaptions = async ({
   supabase,
   artworkId,
-  captionUpdates,
+  imageUpdates,
 }: UpdateAdditionalWorkImageCaptionsInput): Promise<UpdateAdditionalWorkImageCaptionsResult> => {
-  if (captionUpdates.length === 0) {
+  if (imageUpdates.length === 0) {
     return { errorMessage: null, status: 200 }
   }
 
-  const imageIds = captionUpdates.map((item) => item.id)
+  const imageIds = imageUpdates.map((item) => item.id)
   const { data: rows, error } = await supabase
     .from("artwork_images")
     .select("id, is_primary")
@@ -138,10 +144,13 @@ export const updateAdditionalWorkImageCaptions = async ({
     }
   }
 
-  for (const item of captionUpdates) {
+  for (const item of imageUpdates) {
     const { error: updateError } = await supabase
       .from("artwork_images")
-      .update({ caption: item.caption.trim() || null })
+      .update({
+        caption: item.caption.trim() || null,
+        display_order: item.displayOrder,
+      })
       .eq("id", item.id)
       .eq("artwork_id", artworkId)
       .eq("is_primary", false)

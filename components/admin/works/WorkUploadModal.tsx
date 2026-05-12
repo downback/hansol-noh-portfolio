@@ -30,6 +30,7 @@ import { useExhibitionImagePreviews } from "@/components/admin/exhibition/hooks/
 import { formatFileSize } from "@/lib/fileUpload"
 
 type AdditionalWorkImage = {
+  clientId: string
   file: File
   caption: string
 }
@@ -48,6 +49,7 @@ export type WorkFormValues = {
   caption: string
   additionalImages: AdditionalWorkImage[]
   existingAdditionalImages: ExistingAdditionalWorkImage[]
+  additionalImageOrder: string[]
   removedAdditionalImageIds?: string[]
 }
 
@@ -107,6 +109,7 @@ export default function WorkUploadModal({
   const [existingAdditionalImages, setExistingAdditionalImages] = useState<
     ExistingAdditionalWorkImage[]
   >([])
+  const [additionalImageOrder, setAdditionalImageOrder] = useState<string[]>([])
   const [removedAdditionalImageIds, setRemovedAdditionalImageIds] = useState<
     string[]
   >([])
@@ -127,26 +130,40 @@ export default function WorkUploadModal({
     setErrorDialogOpen(true)
   }
 
-  const handleRemoveAdditionalImage = (indexToRemove: number) => {
-    setAdditionalImages((prev) =>
-      prev.filter((_, index) => index !== indexToRemove),
+  const getExistingOrderToken = (id: string) => `existing:${id}`
+  const getNewOrderToken = (clientId: string) => `new:${clientId}`
+
+  const handleRemoveAdditionalImage = (clientIdToRemove: string) => {
+    setAdditionalImages((prev) => {
+      const indexToRemove = prev.findIndex(
+        (item) => item.clientId === clientIdToRemove,
+      )
+      if (indexToRemove >= 0) {
+        removeAdditionalPreviewAt(indexToRemove)
+      }
+      return prev.filter((item) => item.clientId !== clientIdToRemove)
+    })
+    setAdditionalImageOrder((prev) =>
+      prev.filter((item) => item !== getNewOrderToken(clientIdToRemove)),
     )
-    removeAdditionalPreviewAt(indexToRemove)
   }
 
   const handleAdditionalImageCaptionChange = (
-    indexToUpdate: number,
+    idToUpdate: string,
     nextCaption: string,
   ) => {
     setAdditionalImages((prev) =>
-      prev.map((item, index) =>
-        index === indexToUpdate ? { ...item, caption: nextCaption } : item,
+      prev.map((item) =>
+        item.clientId === idToUpdate ? { ...item, caption: nextCaption } : item,
       ),
     )
   }
 
   const handleRemoveExistingAdditionalImage = (id: string) => {
     setExistingAdditionalImages((prev) => prev.filter((item) => item.id !== id))
+    setAdditionalImageOrder((prev) =>
+      prev.filter((item) => item !== getExistingOrderToken(id)),
+    )
     setRemovedAdditionalImageIds((prev) =>
       prev.includes(id) ? prev : [...prev, id],
     )
@@ -163,6 +180,22 @@ export default function WorkUploadModal({
     )
   }
 
+  const moveAdditionalImage = (id: string, direction: -1 | 1) => {
+    setAdditionalImageOrder((prev) => {
+      const existingToken = getExistingOrderToken(id)
+      const newToken = getNewOrderToken(id)
+      const index = prev.findIndex(
+        (item) => item === existingToken || item === newToken,
+      )
+      if (index < 0) return prev
+      const nextIndex = index + direction
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev
+      const next = [...prev]
+      ;[next[index], next[nextIndex]] = [next[nextIndex], next[index]]
+      return next
+    })
+  }
+
   const applyInitialValues = useCallback(() => {
     clearPreviews()
     setSelectedImageName("")
@@ -173,7 +206,11 @@ export default function WorkUploadModal({
     setTitleValue(initialValues?.title ?? "")
     setCaption(initialValues?.caption ?? "")
     setInitialImageUrl(initialValues?.imageUrl ?? "")
-    setExistingAdditionalImages(initialValues?.additionalImages ?? [])
+    const nextExistingAdditionalImages = initialValues?.additionalImages ?? []
+    setExistingAdditionalImages(nextExistingAdditionalImages)
+    setAdditionalImageOrder(
+      nextExistingAdditionalImages.map((item) => getExistingOrderToken(item.id)),
+    )
     setRemovedAdditionalImageIds([])
     setAdditionalImages([])
     setSlugError("")
@@ -238,6 +275,7 @@ export default function WorkUploadModal({
         setYear("")
         setAdditionalImages([])
         setExistingAdditionalImages([])
+        setAdditionalImageOrder([])
         setRemovedAdditionalImageIds([])
         setSlugError("")
       }, 0)
@@ -264,6 +302,7 @@ export default function WorkUploadModal({
       setCaption("")
       setAdditionalImages([])
       setExistingAdditionalImages([])
+      setAdditionalImageOrder([])
       setRemovedAdditionalImageIds([])
       setSlugError("")
     }
@@ -305,6 +344,12 @@ export default function WorkUploadModal({
   const existingAdditionalImagesSerialized = JSON.stringify(
     existingAdditionalImages,
   )
+  const additionalImageOrderSerialized = JSON.stringify(additionalImageOrder)
+  const initialAdditionalImageOrderSerialized = JSON.stringify(
+    (initialValues?.additionalImages ?? []).map((item) =>
+      getExistingOrderToken(item.id),
+    ),
+  )
 
   const hasChanges =
     imageFile !== null ||
@@ -312,11 +357,44 @@ export default function WorkUploadModal({
     titleValue !== initialTitle ||
     caption !== initialCaption ||
     existingAdditionalImagesSerialized !== initialAdditionalImagesSerialized ||
+    additionalImageOrderSerialized !== initialAdditionalImageOrderSerialized ||
     additionalImages.length > 0 ||
     removedAdditionalImageIds.length > 0
 
   const isSaveDisabled =
     isConfirmDisabled || isSubmitting || (isEditMode && !hasChanges)
+
+  const orderedAdditionalImageItems = additionalImageOrder.flatMap((orderItem) => {
+    if (orderItem.startsWith("existing:")) {
+      const id = orderItem.replace("existing:", "")
+      const existingItem = existingAdditionalImages.find((item) => item.id === id)
+      if (!existingItem) return []
+      return [
+        {
+          id: existingItem.id,
+          imageUrl: existingItem.url,
+          caption: existingItem.caption,
+          isExisting: true,
+        },
+      ]
+    }
+
+    const clientId = orderItem.replace("new:", "")
+    const newItemIndex = additionalImages.findIndex(
+      (item) => item.clientId === clientId,
+    )
+    const newItem = additionalImages[newItemIndex]
+    if (!newItem || newItemIndex < 0) return []
+
+    return [
+      {
+        id: newItem.clientId,
+        imageUrl: additionalPreviewUrls[newItemIndex] ?? "",
+        caption: newItem.caption,
+        isExisting: false,
+      },
+    ]
+  })
 
   return (
     <>
@@ -493,29 +571,49 @@ export default function WorkUploadModal({
                     event.target.value = ""
                     return
                   }
+                  const nextAdditionalImages = newFiles.map((file) => ({
+                    clientId: crypto.randomUUID(),
+                    file,
+                    caption: "",
+                  }))
                   setAdditionalImages((prev) => [
                     ...prev,
-                    ...newFiles.map((file) => ({ file, caption: "" })),
+                    ...nextAdditionalImages,
+                  ])
+                  setAdditionalImageOrder((prev) => [
+                    ...prev,
+                    ...nextAdditionalImages.map((item) =>
+                      getNewOrderToken(item.clientId),
+                    ),
                   ])
                   appendAdditionalPreviews(newFiles)
                   event.target.value = ""
                 }}
               />
               <WorkAdditionalImagesEditor
-                existingAdditionalImages={existingAdditionalImages}
-                newAdditionalImages={additionalImages.map((item, index) => ({
-                  file: item.file,
-                  previewUrl: additionalPreviewUrls[index] ?? "",
-                  caption: item.caption,
-                }))}
-                onRemoveExistingAdditionalImage={
-                  handleRemoveExistingAdditionalImage
-                }
-                onRemoveNewAdditionalImage={handleRemoveAdditionalImage}
-                onExistingCaptionChange={
-                  handleExistingAdditionalImageCaptionChange
-                }
-                onNewCaptionChange={handleAdditionalImageCaptionChange}
+                items={orderedAdditionalImageItems}
+                onRemove={(id) => {
+                  const existingItem = existingAdditionalImages.find(
+                    (item) => item.id === id,
+                  )
+                  if (existingItem) {
+                    handleRemoveExistingAdditionalImage(id)
+                    return
+                  }
+                  handleRemoveAdditionalImage(id)
+                }}
+                onCaptionChange={(id, nextCaption) => {
+                  const existingItem = existingAdditionalImages.find(
+                    (item) => item.id === id,
+                  )
+                  if (existingItem) {
+                    handleExistingAdditionalImageCaptionChange(id, nextCaption)
+                    return
+                  }
+                  handleAdditionalImageCaptionChange(id, nextCaption)
+                }}
+                onMoveUp={(id) => moveAdditionalImage(id, -1)}
+                onMoveDown={(id) => moveAdditionalImage(id, 1)}
               />
             </div>
           </div>
@@ -551,6 +649,7 @@ export default function WorkUploadModal({
                   caption,
                   additionalImages,
                   existingAdditionalImages,
+                  additionalImageOrder,
                   removedAdditionalImageIds,
                 })
               }}

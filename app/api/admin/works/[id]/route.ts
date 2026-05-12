@@ -68,6 +68,76 @@ const parseExistingCaptionUpdates = (value: FormDataEntryValue | null) => {
   }
 }
 
+const parseStringList = (value: FormDataEntryValue | null, expected?: number) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return expected === undefined ? [] : Array.from({ length: expected }, () => "")
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
+      return null
+    }
+    if (expected !== undefined && parsed.length !== expected) {
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+const getAdditionalImageDisplayOrders = ({
+  existingImageIds,
+  additionalImageClientIds,
+  additionalImageOrder,
+}: {
+  existingImageIds: string[]
+  additionalImageClientIds: string[]
+  additionalImageOrder: string[]
+}) => {
+  const fallbackOrder = [
+    ...existingImageIds.map((item) => `existing:${item}`),
+    ...additionalImageClientIds.map((item) => `new:${item}`),
+  ]
+  const nextOrder =
+    additionalImageOrder.length > 0 ? additionalImageOrder : fallbackOrder
+  const expectedItems = new Set(fallbackOrder)
+
+  if (
+    nextOrder.length !== expectedItems.size ||
+    nextOrder.some((item) => !expectedItems.has(item))
+  ) {
+    return null
+  }
+
+  const seen = new Set<string>()
+  const existingDisplayOrders = new Map<string, number>()
+  const newDisplayOrders = new Map<string, number>()
+
+  nextOrder.forEach((item, index) => {
+    if (seen.has(item)) {
+      return
+    }
+    seen.add(item)
+
+    if (item.startsWith("existing:")) {
+      existingDisplayOrders.set(item.replace("existing:", ""), index + 1)
+      return
+    }
+
+    if (item.startsWith("new:")) {
+      newDisplayOrders.set(item.replace("new:", ""), index + 1)
+    }
+  })
+
+  if (seen.size !== expectedItems.size) {
+    return null
+  }
+
+  return { existingDisplayOrders, newDisplayOrders }
+}
+
 type RouteContext = {
   params: Promise<{ id: string }>
 }
@@ -97,6 +167,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       formData.get("additional_image_captions"),
       additionalFiles.length,
     )
+    const additionalImageClientIds = parseStringList(
+      formData.get("additional_image_client_ids"),
+      additionalFiles.length,
+    )
+    const additionalImageOrder = parseStringList(
+      formData.get("additional_image_order"),
+    )
     const existingCaptionUpdates = parseExistingCaptionUpdates(
       formData.get("existing_additional_image_captions"),
     )
@@ -108,6 +185,20 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (!additionalCaptions) {
       return NextResponse.json(
         { error: "Invalid additional image captions." },
+        { status: 400 },
+      )
+    }
+
+    if (!additionalImageClientIds) {
+      return NextResponse.json(
+        { error: "Invalid additional image client ids." },
+        { status: 400 },
+      )
+    }
+
+    if (!additionalImageOrder) {
+      return NextResponse.json(
+        { error: "Invalid additional image order." },
         { status: 400 },
       )
     }
@@ -286,16 +377,39 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       })
     }
 
-    if (additionalFiles.length > 0 && artworkSlug) {
-      const { data: latestImage } = await supabase
-        .from("artwork_images")
-        .select("display_order")
-        .eq("artwork_id", id)
-        .order("display_order", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    const filteredCaptionUpdates = existingCaptionUpdates.filter(
+      (item) => !removedAdditionalImageIds.includes(item.id),
+    )
+    const orderResult = getAdditionalImageDisplayOrders({
+      existingImageIds: filteredCaptionUpdates.map((item) => item.id),
+      additionalImageClientIds,
+      additionalImageOrder,
+    })
+    if (!orderResult) {
+      return NextResponse.json(
+        { error: "Invalid additional image order." },
+        { status: 400 },
+      )
+    }
 
-      const baseDisplayOrder = (latestImage?.display_order ?? -1) + 1
+    if (filteredCaptionUpdates.length > 0) {
+      const captionUpdateResult = await updateAdditionalWorkImageCaptions({
+        supabase,
+        artworkId: id,
+        imageUpdates: filteredCaptionUpdates.map((item) => ({
+          ...item,
+          displayOrder: orderResult.existingDisplayOrders.get(item.id) ?? 0,
+        })),
+      })
+      if (captionUpdateResult.errorMessage) {
+        return NextResponse.json(
+          { error: captionUpdateResult.errorMessage },
+          { status: captionUpdateResult.status },
+        )
+      }
+    }
+
+    if (additionalFiles.length > 0 && artworkSlug) {
       const additionalResult = await insertAdditionalWorkImages({
         supabase,
         bucketName,
@@ -303,29 +417,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         slug: artworkSlug,
         captions: additionalCaptions,
         additionalFiles,
-        startDisplayOrder: baseDisplayOrder,
+        startDisplayOrder: filteredCaptionUpdates.length + 1,
+        displayOrders: additionalImageClientIds.map(
+          (clientId) => orderResult.newDisplayOrders.get(clientId) ?? 0,
+        ),
       })
       if (additionalResult.errorMessage) {
         return NextResponse.json(
           { error: additionalResult.errorMessage },
           { status: 500 },
-        )
-      }
-    }
-
-    const filteredCaptionUpdates = existingCaptionUpdates.filter(
-      (item) => !removedAdditionalImageIds.includes(item.id),
-    )
-    if (filteredCaptionUpdates.length > 0) {
-      const captionUpdateResult = await updateAdditionalWorkImageCaptions({
-        supabase,
-        artworkId: id,
-        captionUpdates: filteredCaptionUpdates,
-      })
-      if (captionUpdateResult.errorMessage) {
-        return NextResponse.json(
-          { error: captionUpdateResult.errorMessage },
-          { status: captionUpdateResult.status },
         )
       }
     }

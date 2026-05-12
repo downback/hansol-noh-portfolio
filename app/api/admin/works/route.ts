@@ -42,6 +42,51 @@ const parseCaptionList = (value: FormDataEntryValue | null, expected: number) =>
   }
 }
 
+const parseStringList = (value: FormDataEntryValue | null, expected?: number) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return expected === undefined ? [] : Array.from({ length: expected }, () => "")
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
+      return null
+    }
+    if (expected !== undefined && parsed.length !== expected) {
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+const getNewAdditionalImageDisplayOrders = ({
+  additionalImageClientIds,
+  additionalImageOrder,
+}: {
+  additionalImageClientIds: string[]
+  additionalImageOrder: string[]
+}) => {
+  const fallbackOrder = additionalImageClientIds.map((item) => `new:${item}`)
+  const resolvedOrder =
+    additionalImageOrder.length > 0 ? additionalImageOrder : fallbackOrder
+  const expectedItems = new Set(fallbackOrder)
+
+  if (
+    resolvedOrder.length !== expectedItems.size ||
+    resolvedOrder.some((item) => !expectedItems.has(item)) ||
+    new Set(resolvedOrder).size !== expectedItems.size
+  ) {
+    return null
+  }
+
+  return additionalImageClientIds.map((clientId) => {
+    const orderToken = `new:${clientId}`
+    return resolvedOrder.indexOf(orderToken) + 1
+  })
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await supabaseServer()
@@ -63,6 +108,13 @@ export async function POST(request: Request) {
       formData.get("additional_image_captions"),
       additionalFiles.length,
     )
+    const additionalImageClientIds = parseStringList(
+      formData.get("additional_image_client_ids"),
+      additionalFiles.length,
+    )
+    const additionalImageOrder = parseStringList(
+      formData.get("additional_image_order"),
+    )
 
     if (!(file instanceof File)) {
       return NextResponse.json(
@@ -74,6 +126,20 @@ export async function POST(request: Request) {
     if (!additionalCaptions) {
       return NextResponse.json(
         { error: "Invalid additional image captions." },
+        { status: 400 },
+      )
+    }
+
+    if (!additionalImageClientIds) {
+      return NextResponse.json(
+        { error: "Invalid additional image client ids." },
+        { status: 400 },
+      )
+    }
+
+    if (!additionalImageOrder) {
+      return NextResponse.json(
+        { error: "Invalid additional image order." },
         { status: 400 },
       )
     }
@@ -136,6 +202,17 @@ export async function POST(request: Request) {
     if (!normalizedSlug) {
       return NextResponse.json(
         { error: "Simple title (slug) is required." },
+        { status: 400 },
+      )
+    }
+
+    const additionalImageDisplayOrders = getNewAdditionalImageDisplayOrders({
+      additionalImageClientIds,
+      additionalImageOrder,
+    })
+    if (!additionalImageDisplayOrders) {
+      return NextResponse.json(
+        { error: "Invalid additional image order." },
         { status: 400 },
       )
     }
@@ -256,6 +333,7 @@ export async function POST(request: Request) {
         captions: additionalCaptions,
         additionalFiles,
         startDisplayOrder: 1,
+        displayOrders: additionalImageDisplayOrders,
       })
       if (additionalResult.errorMessage) {
         await removeStoragePathsSafely({

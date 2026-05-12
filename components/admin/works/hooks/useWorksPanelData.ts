@@ -193,8 +193,16 @@ export const useWorksPanelData = () => {
           formData.append("additional_images", item.file)
         })
         formData.append(
+          "additional_image_client_ids",
+          JSON.stringify(values.additionalImages.map((item) => item.clientId)),
+        )
+        formData.append(
           "additional_image_captions",
           JSON.stringify(values.additionalImages.map((item) => item.caption)),
+        )
+        formData.append(
+          "additional_image_order",
+          JSON.stringify(values.additionalImageOrder),
         )
         formData.append(
           "existing_additional_image_captions",
